@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Your Password - Progeny AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #0f3460;
+            border-radius: 20px;
+            padding: 40px 32px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: #7CFC00;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #0f3460;
+        }
+
+        h1 {
+            color: #7CFC00;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        p {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #7CFC00;
+            font-size: 13px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(124, 252, 0, 0.2);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+        }
+
+        .btn {
+            background: #7CFC00;
+            color: #0f3460;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+            margin-top: 10px;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .msg {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: none;
+            text-align: left;
+        }
+
+        .err {
+            background: rgba(255, 50, 50, 0.15);
+            color: #ff8080;
+            border: 1px solid rgba(255, 50, 50, 0.3);
+        }
+
+        .ok {
+            background: rgba(124, 252, 0, 0.15);
+            color: #7CFC00;
+            border: 1px solid rgba(124, 252, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">P</div>
+        <h1>Reset Your Password</h1>
+        <p id="sub">Verifying your secure link...</p>
+        <div id="m" class="msg"></div>
+        <form id="f" style="display:none">
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="p1" required minlength="6" />
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="p2" required minlength="6" />
+            </div>
+            <button type="submit" id="b" class="btn">Update Password</button>
+        </form>
+    </div>
+
+    <script>
+        // CORRECTED KEYS FROM PROJECT .env
+        const client = window.supabase.createClient(
+            'https://cywbxowtbvcvxldljgjn.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d2J4b3d0YnZjdnhsZGxqZ2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyODY2MTAsImV4cCI6MjA3Mzg2MjYxMH0.UkXVM-30QuB8fv_YR9BIxwY3fazq5RgznLSMqHBxoAI'
+        );
+
+        const m = document.getElementById('m');
+        const b = document.getElementById('b');
+        const f = document.getElementById('f');
+        const sub = document.getElementById('sub');
+
+        function show(txt, isErr) {
+            m.textContent = txt;
+            m.className = 'msg ' + (isErr ? 'err' : 'ok');
+            m.style.display = 'block';
+        }
+
+        async function verify() {
+            const { data: { session }, error } = await client.auth.getSession();
+
+            if (session) {
+                show('Link verified! You can now set your new password.', false);
+                f.style.display = 'block';
+                sub.textContent = 'Session established.';
+            } else {
+                if (window.location.hash) {
+                    show('This link is invalid or expired. Please request a new one from the app.', true);
+                } else {
+                    show('No reset link found. Use the link from your email.', true);
+                }
+            }
+        }
+
+        // Check for session on load
+        verify();
+
+        // Also check on auth state change (Supabase parses hash automatically)
+        client.auth.onAuthStateChange((event, session) => {
+            if (session) verify();
+        });
+
+        document.getElementById('f').onsubmit = async (e) => {
+            e.preventDefault();
+            const p1 = document.getElementById('p1').value;
+            const p2 = document.getElementById('p2').value;
+
+            if (p1 !== p2) return show('Passwords do not match!', true);
+
+            b.disabled = true;
+            b.textContent = 'Updating...';
+
+            const { error } = await client.auth.updateUser({ password: p1 });
+
+            if (error) {
+                show(error.message, true);
+                b.disabled = false;
+                b.textContent = 'Update Password';
+            } else {
+                show('Password updated successfully! Redirecting...', false);
+                setTimeout(() => window.location.href = 'https://progeny-password-reset-success.pages.dev/', 2000);
+            }
+        };
+    </script>
+</body>
+
+</html>
