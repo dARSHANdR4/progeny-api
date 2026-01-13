@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Accessibility, Globe, Volume2, Eye, Crown, ExternalLink, LogOut, Trash2 } from 'lucide-react-native';
+import { Accessibility, Globe, Eye, Crown, ExternalLink, LogOut, Trash2, Github, Link2 } from 'lucide-react-native';
 import { SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -18,12 +18,14 @@ const LANGUAGES = [
     { code: 'mr', name: 'मराठी (Marathi)' },
 ];
 
+// External Links
+const GITHUB_URL = 'https://github.com/dARSHANdR4/progeny-api';
+const PROGENY_WEBSITE_URL = 'https://progeny-api.vercel.app';
+
 export default function AccessibilityScreen() {
     const { isPremium, signOut, isDemoMode } = useAuth();
     const { isDark, toggleTheme, isHighContrast, toggleHighContrast, colors } = useTheme();
     const { language, setLanguage, t } = useLanguage();
-    const [voiceEnabled, setVoiceEnabled] = useState(false);
-    const [pushEnabled, setPushEnabled] = useState(true);
     const [showSubscription, setShowSubscription] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -194,40 +196,7 @@ export default function AccessibilityScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Voice & Notifications */}
-                <View style={[styles.section, dynamicStyles.section]}>
-                    <View style={styles.sectionHeader}>
-                        {/* @ts-ignore */}
-                        <Volume2 size={20} color={colors.primary} />
-                        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t('voice_notifications')}</Text>
-                    </View>
 
-                    <View style={[styles.settingItem, { borderBottomColor: colors.border }]}>
-                        <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('voice_commands')}</Text>
-                        <Switch
-                            value={voiceEnabled}
-                            onValueChange={(val) => {
-                                setVoiceEnabled(val);
-                                Alert.alert('Voice Settings', `Voice commands ${val ? 'enabled' : 'disabled'}`);
-                            }}
-                            trackColor={{ false: colors.border, true: colors.primary + '60' }}
-                            thumbColor={voiceEnabled ? colors.primary : colors.textSecondary}
-                        />
-                    </View>
-
-                    <View style={[styles.settingItem, { borderBottomColor: colors.border }]}>
-                        <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('push_notifications')}</Text>
-                        <Switch
-                            value={pushEnabled}
-                            onValueChange={(val) => {
-                                setPushEnabled(val);
-                                Alert.alert('Notification Settings', `Push notifications ${val ? 'enabled' : 'disabled'}`);
-                            }}
-                            trackColor={{ false: colors.border, true: colors.primary + '60' }}
-                            thumbColor={pushEnabled ? colors.primary : colors.textSecondary}
-                        />
-                    </View>
-                </View>
 
                 {/* Display Section */}
                 <View style={[styles.section, dynamicStyles.section]}>
@@ -262,16 +231,36 @@ export default function AccessibilityScreen() {
                     </View>
                 </View>
 
-                {/* Support Section */}
+                {/* Links Section */}
                 <View style={[styles.section, dynamicStyles.section]}>
-                    <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle, { marginBottom: SPACING.md }]}>{t('support')}</Text>
-                    <TouchableOpacity style={[styles.settingItem, { borderBottomColor: colors.border }]}>
-                        <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('help_center')}</Text>
+                    <View style={styles.sectionHeader}>
+                        {/* @ts-ignore */}
+                        <Link2 size={20} color={colors.primary} />
+                        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Links</Text>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[styles.settingItem, { borderBottomColor: colors.border }]}
+                        onPress={() => Linking.openURL(GITHUB_URL)}
+                    >
+                        <View style={styles.linkItem}>
+                            {/* @ts-ignore */}
+                            <Github size={18} color={colors.textPrimary} />
+                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>GitHub Repository</Text>
+                        </View>
                         {/* @ts-ignore */}
                         <ExternalLink size={16} color={colors.textSecondary} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.settingItem, { borderBottomColor: colors.border }]}>
-                        <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('privacy_policy')}</Text>
+
+                    <TouchableOpacity
+                        style={[styles.settingItem, { borderBottomColor: colors.border }]}
+                        onPress={() => Linking.openURL(PROGENY_WEBSITE_URL)}
+                    >
+                        <View style={styles.linkItem}>
+                            {/* @ts-ignore */}
+                            <Crown size={18} color={premiumColor} />
+                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Progeny Website</Text>
+                        </View>
                         {/* @ts-ignore */}
                         <ExternalLink size={16} color={colors.textSecondary} />
                     </TouchableOpacity>
@@ -355,6 +344,8 @@ const styles = StyleSheet.create({
     settingLabel: { ...TYPOGRAPHY.body, fontWeight: '500' },
     settingValue: { ...TYPOGRAPHY.body, opacity: 0.7 },
     settingValueContainer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    linkItem: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+
     languageModal: {
         borderRadius: 16,
         padding: SPACING.lg,
