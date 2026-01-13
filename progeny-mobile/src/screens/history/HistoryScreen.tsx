@@ -97,13 +97,13 @@ export default function HistoryScreen() {
                 <View style={styles.emptyState}>
                     {/* @ts-ignore */}
                     <AlertCircle size={64} color={colors.error || '#EF4444'} />
-                    <Text style={[styles.emptyTitle, { color: colors.error || '#EF4444' }]}>Failed to load history</Text>
-                    <Text style={[styles.emptyText, { color: colors.textSecondary }]}>{error}</Text>
+                    <Text style={[styles.emptyTitle, { color: colors.error || '#EF4444' }, scaledTypography.h3]}>{t('fetch_failed')}</Text>
+                    <Text style={[styles.emptyText, { color: colors.textSecondary }, scaledTypography.body]}>{error}</Text>
                     <TouchableOpacity
                         style={[styles.retryButton, { backgroundColor: colors.primary }]}
                         onPress={fetchHistory}
                     >
-                        <Text style={styles.retryButtonText}>Retry</Text>
+                        <Text style={[styles.retryButtonText, scaledTypography.body]}>{t('retry')}</Text>
                     </TouchableOpacity>
                 </View>
             ) : history.length === 0 ? (

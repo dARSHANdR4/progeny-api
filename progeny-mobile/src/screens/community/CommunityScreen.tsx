@@ -91,7 +91,7 @@ export default function CommunityScreen() {
     const handleShare = async (post: any) => {
         try {
             await Share.share({
-                message: `Progeniture Farmer Community: ${post.user_name} shared: "${post.content}"`,
+                message: t('community_share_message').replace('{{user}}', post.user_name).replace('{{content}}', post.content),
             });
         } catch (error) {
             console.error('Error sharing:', error);
@@ -160,7 +160,7 @@ export default function CommunityScreen() {
     );
 
     const renderPost = ({ item }: { item: any }) => {
-        const userName = item.user_name || 'Unknown Farmer';
+        const userName = item.user_name || t('unknown_farmer');
         const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Just now';
 
         return (
@@ -177,7 +177,8 @@ export default function CommunityScreen() {
                     </View>
                 </View>
 
-                <Text style={[styles.postContent, { color: colors.textPrimary }]}>{item.content}</Text>
+                <Text style={[styles.postContent, { color: colors.textPrimary }, scaledTypography.body]}>{item.content}</Text>
+
 
                 {item.image_url && <Image source={{ uri: item.image_url }} style={styles.postImage} />}
 
@@ -206,8 +207,9 @@ export default function CommunityScreen() {
             <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, borderBottomWidth: isHighContrast ? 3 : 1 }]}>
                 {/* @ts-ignore */}
                 <Users size={24} color={colors.primary} />
-                <Text style={[styles.title, { color: colors.textPrimary }]}>{t('farmer_community')}</Text>
+                <Text style={[styles.title, { color: colors.textPrimary }, scaledTypography.h2]}>{t('farmer_community')}</Text>
             </View>
+
 
             <FlatList
                 data={Array.isArray(posts) ? posts : []}
@@ -227,8 +229,8 @@ export default function CommunityScreen() {
                 ListEmptyComponent={
                     !isLoading ? (
                         <View style={styles.emptyContainer}>
-                            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                                No posts yet. Be the first to share your progress!
+                            <Text style={[styles.emptyText, { color: colors.textSecondary }, scaledTypography.body]}>
+                                {t('no_posts')}
                             </Text>
                         </View>
                     ) : (
@@ -254,7 +256,7 @@ export default function CommunityScreen() {
                                 {/* @ts-ignore */}
                                 <X size={24} color={colors.textPrimary} />
                             </TouchableOpacity>
-                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Share Progress</Text>
+                            <Text style={[styles.modalTitle, { color: colors.textPrimary }, scaledTypography.h3]}>{t('share_title')}</Text>
                             <TouchableOpacity
                                 onPress={handleCreatePost}
                                 disabled={isSubmitting || !newPostContent.trim()}
@@ -262,13 +264,13 @@ export default function CommunityScreen() {
                                 {isSubmitting ? (
                                     <ActivityIndicator size="small" color={colors.primary} />
                                 ) : (
-                                    <Text style={[styles.postBtnText, { color: colors.primary, opacity: newPostContent.trim() ? 1 : 0.5 }]}>Post</Text>
+                                    <Text style={[styles.postBtnText, { color: colors.primary, opacity: newPostContent.trim() ? 1 : 0.5 }, scaledTypography.body]}>{t('post_action')}</Text>
                                 )}
                             </TouchableOpacity>
                         </View>
                         <TextInput
                             style={[styles.input, { color: colors.textPrimary }]}
-                            placeholder="What's happening on your farm?"
+                            placeholder={t('post_placeholder')}
                             placeholderTextColor={colors.textSecondary}
                             multiline
                             value={newPostContent}
@@ -296,7 +298,7 @@ export default function CommunityScreen() {
                                 {/* @ts-ignore */}
                                 <X size={24} color={colors.textPrimary} />
                             </TouchableOpacity>
-                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Comments</Text>
+                            <Text style={[styles.modalTitle, { color: colors.textPrimary }, scaledTypography.h3]}>{t('comments')}</Text>
                             <View style={{ width: 24 }} />
                         </View>
 
@@ -305,7 +307,7 @@ export default function CommunityScreen() {
                         ) : (
                             <ScrollView style={{ flex: 1 }}>
                                 {comments.length === 0 ? (
-                                    <Text style={[styles.emptyComments, { color: colors.textSecondary }]}>No comments yet. Start the conversation!</Text>
+                                    <Text style={[styles.emptyComments, { color: colors.textSecondary }, scaledTypography.body]}>{t('no_comments')}</Text>
                                 ) : (
                                     comments.map(c => (
                                         <View key={c.id} style={styles.commentItem}>
@@ -321,7 +323,7 @@ export default function CommunityScreen() {
                         <View style={[styles.commentInputContainer, { borderTopColor: colors.border }]}>
                             <TextInput
                                 style={[styles.commentInput, { color: colors.textPrimary, backgroundColor: colors.background }]}
-                                placeholder="Add a comment..."
+                                placeholder={t('add_comment')}
                                 placeholderTextColor={colors.textSecondary}
                                 value={commentText}
                                 onChangeText={setCommentText}
@@ -343,7 +345,7 @@ export default function CommunityScreen() {
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
-        </SafeAreaView>
+        </SafeAreaView >
     );
 }
 

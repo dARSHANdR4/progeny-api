@@ -2,8 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Calendar, Leaf, AlertTriangle, CheckCircle } from 'lucide-react-native';
-import { COLORS, SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
+import { SPACING, SHADOWS } from '../../styles/theme';
 import { Card, Badge } from '../../components/ui';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface HistoryDetailScreenProps {
     route?: {
@@ -23,6 +25,9 @@ interface HistoryDetailScreenProps {
 }
 
 export default function HistoryDetailScreen({ route, navigation }: HistoryDetailScreenProps) {
+    const { colors, isDark, isHighContrast, scaledTypography } = useTheme();
+    const { t } = useLanguage();
+
     const scan = route?.params?.scan || {
         id: 'demo-1',
         crop_type: 'Tomato',
@@ -38,7 +43,7 @@ export default function HistoryDetailScreen({ route, navigation }: HistoryDetail
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-IN', {
+        return new Date(dateString).toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -49,19 +54,28 @@ export default function HistoryDetailScreen({ route, navigation }: HistoryDetail
 
     const isHealthy = scan.disease_name.toLowerCase().includes('healthy');
     const StatusIcon = isHealthy ? CheckCircle : AlertTriangle;
-    const statusColor = isHealthy ? COLORS.success : COLORS.warning;
+    const statusColor = isHealthy ? colors.success : colors.warning;
+
+    // Dynamic localization for crop and disease
+    const cropKey = scan.crop_type.toLowerCase();
+    const translatedCrop = t(cropKey);
+    const cropName = translatedCrop === cropKey ? scan.crop_type : translatedCrop;
+
+    const diseaseKey = scan.disease_name.toLowerCase().replace(' ', '_');
+    const translatedDisease = t(diseaseKey);
+    const diseaseName = translatedDisease === diseaseKey ? scan.disease_name : translatedDisease;
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+            <View style={[styles.header, { borderBottomColor: colors.border }]}>
                 <TouchableOpacity
-                    style={styles.backButton}
+                    style={[styles.backButton, { backgroundColor: colors.surface }]}
                     onPress={() => navigation?.goBack()}
                 >
                     {/* @ts-ignore */}
-                    <ArrowLeft size={24} color={COLORS.textPrimary} />
+                    <ArrowLeft size={24} color={colors.textPrimary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Scan Details</Text>
+                <Text style={[styles.headerTitle, { color: colors.textPrimary }, scaledTypography.h3]}>{t('scan_details')}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -70,10 +84,10 @@ export default function HistoryDetailScreen({ route, navigation }: HistoryDetail
                 {scan.image_url ? (
                     <Image source={{ uri: scan.image_url }} style={styles.scanImage} />
                 ) : (
-                    <View style={styles.imagePlaceholder}>
+                    <View style={[styles.imagePlaceholder, { backgroundColor: colors.surface }]}>
                         {/* @ts-ignore */}
-                        <Leaf size={48} color={COLORS.textSecondary} />
-                        <Text style={styles.imagePlaceholderText}>No image available</Text>
+                        <Leaf size={48} color={colors.textSecondary} />
+                        <Text style={[styles.imagePlaceholderText, { color: colors.textSecondary }, scaledTypography.bodySmall]}>{t('no_image')}</Text>
                     </View>
                 )}
 
@@ -83,9 +97,9 @@ export default function HistoryDetailScreen({ route, navigation }: HistoryDetail
                         {/* @ts-ignore */}
                         <StatusIcon size={32} color={statusColor} />
                         <View style={styles.statusInfo}>
-                            <Text style={styles.diseaseName}>{scan.disease_name}</Text>
+                            <Text style={[styles.diseaseName, { color: colors.textPrimary }, scaledTypography.h2]}>{diseaseName}</Text>
                             <Badge
-                                label={`${scan.confidence.toFixed(1)}% confidence`}
+                                label={`${scan.confidence.toFixed(1)}${t('confidence_percent')}`}
                                 variant={isHealthy ? 'success' : 'warning'}
                             />
                         </View>
@@ -94,23 +108,23 @@ export default function HistoryDetailScreen({ route, navigation }: HistoryDetail
 
                 {/* Details Card */}
                 <Card variant="outlined" style={styles.detailsCard}>
-                    <Text style={styles.sectionTitle}>Scan Information</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.textPrimary }, scaledTypography.h3]}>{t('scan_info')}</Text>
 
-                    <View style={styles.detailRow}>
+                    <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
                         {/* @ts-ignore */}
-                        <Leaf size={20} color={COLORS.primary} />
+                        <Leaf size={20} color={colors.primary} />
                         <View style={styles.detailInfo}>
-                            <Text style={styles.detailLabel}>Crop Type</Text>
-                            <Text style={styles.detailValue}>{scan.crop_type}</Text>
+                            <Text style={[styles.detailLabel, { color: colors.textSecondary }, scaledTypography.caption]}>{t('crop_type_label')}</Text>
+                            <Text style={[styles.detailValue, { color: colors.textPrimary }, scaledTypography.body]}>{cropName}</Text>
                         </View>
                     </View>
 
-                    <View style={styles.detailRow}>
+                    <View style={[styles.detailRow, { borderBottomColor: colors.border }]}>
                         {/* @ts-ignore */}
-                        <Calendar size={20} color={COLORS.primary} />
+                        <Calendar size={20} color={colors.primary} />
                         <View style={styles.detailInfo}>
-                            <Text style={styles.detailLabel}>Scanned On</Text>
-                            <Text style={styles.detailValue}>{formatDate(scan.created_at)}</Text>
+                            <Text style={[styles.detailLabel, { color: colors.textSecondary }, scaledTypography.caption]}>{t('scanned_on_label')}</Text>
+                            <Text style={[styles.detailValue, { color: colors.textPrimary }, scaledTypography.body]}>{formatDate(scan.created_at)}</Text>
                         </View>
                     </View>
                 </Card>
@@ -118,13 +132,13 @@ export default function HistoryDetailScreen({ route, navigation }: HistoryDetail
                 {/* Remedies Card */}
                 {!isHealthy && scan.remedies && scan.remedies.length > 0 && (
                     <Card variant="elevated" style={styles.remediesCard}>
-                        <Text style={styles.sectionTitle}>Recommended Actions</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.textPrimary }, scaledTypography.h3]}>{t('recommended_actions')}</Text>
                         {scan.remedies.map((remedy, index) => (
                             <View key={index} style={styles.remedyItem}>
-                                <View style={styles.remedyBullet}>
-                                    <Text style={styles.remedyNumber}>{index + 1}</Text>
+                                <View style={[styles.remedyBullet, { backgroundColor: colors.primary }]}>
+                                    <Text style={[styles.remedyNumber, { color: isHighContrast ? '#000' : '#fff' }]}>{index + 1}</Text>
                                 </View>
-                                <Text style={styles.remedyText}>{remedy}</Text>
+                                <Text style={[styles.remedyText, { color: colors.textPrimary }, scaledTypography.body]}>{remedy}</Text>
                             </View>
                         ))}
                     </Card>
@@ -132,12 +146,12 @@ export default function HistoryDetailScreen({ route, navigation }: HistoryDetail
 
                 {/* Healthy Congrats */}
                 {isHealthy && (
-                    <Card variant="elevated" style={styles.healthyCard}>
-                        <Text style={styles.healthyTitle}>🎉 Great News!</Text>
-                        <Text style={styles.healthyText}>
-                            Your {scan.crop_type} plant appears to be healthy. Keep up the good work with your farming practices!
+                    <View style={[styles.healthyCard, { backgroundColor: isHighContrast ? '#000' : colors.success + '20', borderWidth: isHighContrast ? 2 : 0, borderColor: colors.success }]}>
+                        <Text style={[styles.healthyTitle, { color: colors.success }, scaledTypography.h2]}>{t('great_news')}</Text>
+                        <Text style={[styles.healthyText, { color: colors.textPrimary }, scaledTypography.body]}>
+                            {t('healthy_plant_desc').replace('{{crop}}', cropName)}
                         </Text>
-                    </Card>
+                    </View>
                 )}
             </ScrollView>
         </SafeAreaView>
@@ -147,7 +161,6 @@ export default function HistoryDetailScreen({ route, navigation }: HistoryDetail
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
     },
     header: {
         flexDirection: 'row',
@@ -156,19 +169,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: SPACING.md,
         paddingVertical: SPACING.md,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: COLORS.surface,
         alignItems: 'center',
         justifyContent: 'center',
     },
     headerTitle: {
-        ...TYPOGRAPHY.h3,
-        color: COLORS.textPrimary,
+        textAlign: 'center',
     },
     content: {
         flex: 1,
@@ -184,14 +194,11 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 200,
         borderRadius: 16,
-        backgroundColor: COLORS.surface,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: SPACING.md,
     },
     imagePlaceholderText: {
-        ...TYPOGRAPHY.bodySmall,
-        color: COLORS.textSecondary,
         marginTop: SPACING.sm,
     },
     statusCard: {
@@ -207,16 +214,14 @@ const styles = StyleSheet.create({
         gap: SPACING.xs,
     },
     diseaseName: {
-        ...TYPOGRAPHY.h2,
-        color: COLORS.textPrimary,
+        fontWeight: 'bold',
     },
     detailsCard: {
         marginBottom: SPACING.md,
     },
     sectionTitle: {
-        ...TYPOGRAPHY.h3,
-        color: COLORS.textPrimary,
         marginBottom: SPACING.md,
+        fontWeight: 'bold',
     },
     detailRow: {
         flexDirection: 'row',
@@ -224,18 +229,14 @@ const styles = StyleSheet.create({
         gap: SPACING.md,
         paddingVertical: SPACING.sm,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
     },
     detailInfo: {
         flex: 1,
     },
     detailLabel: {
-        ...TYPOGRAPHY.caption,
-        color: COLORS.textSecondary,
+        marginBottom: 2,
     },
     detailValue: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.textPrimary,
         fontWeight: '600',
     },
     remediesCard: {
@@ -251,31 +252,24 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: COLORS.primary,
         alignItems: 'center',
         justifyContent: 'center',
     },
     remedyNumber: {
-        color: '#fff',
         fontWeight: 'bold',
         fontSize: 12,
     },
     remedyText: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.textPrimary,
         flex: 1,
     },
     healthyCard: {
-        backgroundColor: COLORS.successLight,
+        padding: SPACING.lg,
+        borderRadius: 16,
         marginBottom: SPACING.md,
     },
     healthyTitle: {
-        ...TYPOGRAPHY.h2,
-        color: '#15803D',
         marginBottom: SPACING.sm,
     },
     healthyText: {
-        ...TYPOGRAPHY.body,
-        color: '#166534',
     },
 });

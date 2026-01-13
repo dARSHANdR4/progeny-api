@@ -72,7 +72,7 @@ export default function DetectionScreen() {
 
     const pickImage = async (useCamera: boolean) => {
         if (!selectedCrop) {
-            Alert.alert('Select Crop First', 'Please select a crop type before uploading an image.');
+            Alert.alert(t('select_crop_first'), t('select_crop_desc'));
             return;
         }
 
@@ -81,7 +81,7 @@ export default function DetectionScreen() {
             : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
         if (!permissionResult.granted) {
-            Alert.alert('Permission Required', `Please grant ${useCamera ? 'camera' : 'gallery'} permission.`);
+            Alert.alert(t('permission_required'), useCamera ? t('grant_camera_permission') : t('grant_gallery_permission'));
             return;
         }
 
@@ -122,9 +122,9 @@ export default function DetectionScreen() {
             setScanResult(response.scan);
             await refreshUserData();
         } catch (err: any) {
-            setError(err.message || 'Scan failed. Please try again.');
+            setError(err.message || t('something_went_wrong'));
             if (err.message?.includes('limit')) {
-                Alert.alert('Limit Reached', err.message);
+                Alert.alert(t('limit_reached'), err.message);
             }
         } finally {
             setIsScanning(false);
@@ -141,19 +141,19 @@ export default function DetectionScreen() {
     const handleSignOut = () => {
         if (isDemoMode) {
             Alert.alert(
-                'Demo Mode',
-                'Sign out is disabled in demo mode. In the real app, this would log you out.',
-                [{ text: 'OK' }]
+                t('demo_mode'),
+                t('data_export_disabled'), // Reusing this for signout disable in demo
+                [{ text: t('ok') }]
             );
             return;
         }
 
         Alert.alert(
-            'Sign Out',
-            'Are you sure you want to sign out?',
+            t('sign_out_confirm'),
+            t('sign_out_confirm_msg'),
             [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Sign Out', style: 'destructive', onPress: () => signOut() }
+                { text: t('cancel'), style: 'cancel' },
+                { text: t('sign_out'), style: 'destructive', onPress: () => signOut() }
             ]
         );
     };
@@ -189,12 +189,12 @@ export default function DetectionScreen() {
                             <View style={[styles.premiumBadge, { backgroundColor: isHighContrast ? colors.primary : COLORS.premiumPurple }]}>
                                 {/* @ts-ignore */}
                                 <Crown size={14} color={isHighContrast ? '#000' : '#fff'} />
-                                <Text style={[styles.premiumText, { color: isHighContrast ? '#000' : '#fff' }]}>Premium</Text>
+                                <Text style={[styles.premiumText, { color: isHighContrast ? '#000' : '#fff' }]}>{t('premium_badge')}</Text>
                             </View>
                         )}
                         {isAdmin && (
                             <View style={[styles.adminBadge, { backgroundColor: isHighContrast ? colors.primary : COLORS.error }]}>
-                                <Text style={[styles.adminText, { color: isHighContrast ? '#000' : '#fff' }]}>Admin</Text>
+                                <Text style={[styles.adminText, { color: isHighContrast ? '#000' : '#fff' }]}>{t('admin_badge')}</Text>
                             </View>
                         )}
                     </View>
@@ -210,19 +210,19 @@ export default function DetectionScreen() {
                         </View>
                         <View style={styles.usageInfo}>
                             <Text style={[styles.usageLabel, { color: colors.textSecondary }, scaledTypography.body]}>{t('scans_used')}</Text>
-                            <Text style={[styles.usageValue, { color: colors.textPrimary }, scaledTypography.body]}>{usageCount} of {dailyLimit}</Text>
+                            <Text style={[styles.usageValue, { color: colors.textPrimary }, scaledTypography.body]}>{usageCount} {t('of')} {dailyLimit}</Text>
                         </View>
                         <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                             <View style={[styles.progressFill, { width: `${usagePercentage}%`, backgroundColor: colors.primary }]} />
                         </View>
                         <View style={styles.usageStats}>
                             <View style={[styles.usageStat, { backgroundColor: colors.background, borderWidth: isHighContrast ? 1 : 0, borderColor: colors.border }]}>
-                                <Text style={[styles.statValue, { color: colors.primary }]}>{Math.max(0, dailyLimit - usageCount)}</Text>
-                                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('remaining')}</Text>
+                                <Text style={[styles.statValue, { color: colors.primary, ...scaledTypography.h3, fontWeight: 'bold' }]}>{Math.max(0, dailyLimit - usageCount)}</Text>
+                                <Text style={[styles.statLabel, { color: colors.textSecondary, ...scaledTypography.caption }]}>{t('remaining')}</Text>
                             </View>
                             <View style={[styles.usageStat, { backgroundColor: colors.background, borderWidth: isHighContrast ? 1 : 0, borderColor: colors.border }]}>
-                                <Text style={[styles.statValue, { color: colors.textPrimary }]}>{usageCount}</Text>
-                                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('used')}</Text>
+                                <Text style={[styles.statValue, { color: colors.textPrimary, ...scaledTypography.h3, fontWeight: 'bold' }]}>{usageCount}</Text>
+                                <Text style={[styles.statLabel, { color: colors.textSecondary, ...scaledTypography.caption }]}>{t('used')}</Text>
                             </View>
                         </View>
                         {usageCount >= dailyLimit && (
@@ -251,7 +251,7 @@ export default function DetectionScreen() {
                             {/* @ts-ignore */}
                             <Upload size={20} color={colors.primary} />
                             <Text style={[styles.uploadTitle, { color: colors.textPrimary }, scaledTypography.h3]}>
-                                {t('upload_leaf')} ({selectedCrop.charAt(0).toUpperCase() + selectedCrop.slice(1)})
+                                {t('upload_leaf')} ({t(selectedCrop)})
                             </Text>
                         </View>
 
@@ -263,7 +263,7 @@ export default function DetectionScreen() {
                                         style={[styles.changeImageBtn, { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }]}
                                         onPress={() => setImageUri(null)}
                                     >
-                                        <Text style={[styles.changeImageText, { color: colors.textPrimary }]}>Change Image</Text>
+                                        <Text style={[styles.changeImageText, { color: colors.primary }]}>{t('change_image')}</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>
@@ -295,15 +295,15 @@ export default function DetectionScreen() {
                         )}
 
                         {error && (
-                            <View style={styles.errorContainer}>
-                                <Text style={styles.errorText}>{error}</Text>
+                            <View style={[styles.errorContainer, { backgroundColor: colors.error + '20' }]}>
+                                <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
                             </View>
                         )}
 
                         {imageUri && (
                             <View style={styles.actionButtons}>
                                 <TouchableOpacity
-                                    style={[styles.scanButton, { backgroundColor: isHighContrast ? colors.primary : COLORS.accent }, (isScanning || !canScan) && styles.scanButtonDisabled, isHighContrast && { borderWidth: 2, borderColor: '#000' }]}
+                                    style={[styles.scanButton, { backgroundColor: isHighContrast ? colors.primary : colors.secondary }, (isScanning || !canScan) && styles.scanButtonDisabled, isHighContrast && { borderWidth: 2, borderColor: '#000' }]}
                                     onPress={handleScan}
                                     disabled={isScanning || !canScan}
                                 >
@@ -340,8 +340,8 @@ export default function DetectionScreen() {
                 {/* Sign Out */}
                 <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
                     {/* @ts-ignore */}
-                    <LogOut size={18} color={COLORS.error} />
-                    <Text style={styles.signOutText}>{t('sign_out')}</Text>
+                    <LogOut size={18} color={colors.error} />
+                    <Text style={[styles.signOutText, { color: colors.error }]}>{t('sign_out')}</Text>
                 </TouchableOpacity>
 
                 <SubscriptionModal
@@ -356,7 +356,6 @@ export default function DetectionScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
     },
     scrollContent: {
         padding: SPACING.lg,
@@ -371,41 +370,33 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
     },
     welcomeText: {
-        ...TYPOGRAPHY.h2,
-        color: COLORS.textPrimary,
+        fontWeight: 'bold',
     },
     welcomeSubtext: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.textSecondary,
         marginTop: SPACING.xs,
     },
     premiumBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.premiumPurple,
         paddingHorizontal: SPACING.sm,
         paddingVertical: SPACING.xs,
         borderRadius: 12,
         gap: 4,
     },
     premiumText: {
-        color: '#fff',
         fontSize: 12,
         fontWeight: '600',
     },
     adminBadge: {
-        backgroundColor: COLORS.error,
         paddingHorizontal: SPACING.sm,
         paddingVertical: SPACING.xs,
         borderRadius: 12,
     },
     adminText: {
-        color: '#fff',
         fontSize: 12,
         fontWeight: '600',
     },
     usageCard: {
-        backgroundColor: COLORS.surface,
         borderRadius: 16,
         padding: SPACING.lg,
         ...SHADOWS.medium,
@@ -417,8 +408,7 @@ const styles = StyleSheet.create({
         gap: SPACING.sm,
     },
     usageTitle: {
-        ...TYPOGRAPHY.h3,
-        color: COLORS.textPrimary,
+        fontWeight: 'bold',
     },
     usageInfo: {
         flexDirection: 'row',
@@ -426,23 +416,17 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.sm,
     },
     usageLabel: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.textSecondary,
     },
     usageValue: {
-        ...TYPOGRAPHY.body,
         fontWeight: '600',
-        color: COLORS.textPrimary,
     },
     progressBar: {
         height: 8,
-        backgroundColor: COLORS.border,
         borderRadius: 4,
         overflow: 'hidden',
     },
     progressFill: {
         height: '100%',
-        backgroundColor: COLORS.primary,
         borderRadius: 4,
     },
     usageStats: {
@@ -452,35 +436,30 @@ const styles = StyleSheet.create({
     },
     usageStat: {
         flex: 1,
-        backgroundColor: COLORS.background,
         padding: SPACING.sm,
         borderRadius: 8,
         alignItems: 'center',
     },
     statValue: {
-        ...TYPOGRAPHY.h3,
-        color: COLORS.primary,
+        fontWeight: 'bold',
+        fontSize: 18,
     },
     statLabel: {
-        ...TYPOGRAPHY.caption,
-        color: COLORS.textSecondary,
+        fontSize: 12,
     },
     limitWarning: {
         flexDirection: 'row',
         alignItems: 'center',
         marginTop: SPACING.md,
         padding: SPACING.sm,
-        backgroundColor: COLORS.warningLight,
         borderRadius: 8,
         gap: SPACING.sm,
     },
     limitText: {
-        ...TYPOGRAPHY.bodySmall,
-        color: '#92400E',
+        fontSize: 13,
         flex: 1,
     },
     uploadCard: {
-        backgroundColor: COLORS.surface,
         borderRadius: 16,
         padding: SPACING.lg,
         ...SHADOWS.medium,
@@ -492,8 +471,7 @@ const styles = StyleSheet.create({
         gap: SPACING.sm,
     },
     uploadTitle: {
-        ...TYPOGRAPHY.h3,
-        color: COLORS.textPrimary,
+        fontWeight: 'bold',
     },
     imageButtons: {
         flexDirection: 'row',
@@ -503,20 +481,16 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         padding: SPACING.lg,
-        backgroundColor: COLORS.background,
         borderRadius: 12,
         borderWidth: 2,
         borderStyle: 'dashed',
-        borderColor: COLORS.border,
         gap: SPACING.sm,
     },
     imageButtonText: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.textPrimary,
         fontWeight: '500',
     },
     disabled: {
-        color: COLORS.textMuted,
+        opacity: 0.5,
     },
     imagePreview: {
         alignItems: 'center',
@@ -530,23 +504,17 @@ const styles = StyleSheet.create({
     changeImageBtn: {
         marginTop: SPACING.sm,
         padding: SPACING.sm,
-        backgroundColor: COLORS.background,
         borderRadius: 8,
     },
     changeImageText: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.primary,
         fontWeight: '500',
     },
     errorContainer: {
         marginTop: SPACING.md,
         padding: SPACING.sm,
-        backgroundColor: COLORS.errorLight,
         borderRadius: 8,
     },
     errorText: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.error,
     },
     actionButtons: {
         marginTop: SPACING.md,
@@ -556,7 +524,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: COLORS.accent,
         padding: SPACING.md,
         borderRadius: 12,
         gap: SPACING.sm,
@@ -566,7 +533,6 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
     scanButtonText: {
-        color: '#fff',
         fontSize: 16,
         fontWeight: '600',
     },
@@ -574,16 +540,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: COLORS.background,
         padding: SPACING.md,
         borderRadius: 12,
-        borderWidth: 1,
-        borderColor: COLORS.border,
         gap: SPACING.sm,
     },
     resetButtonText: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.textSecondary,
     },
     signOutButton: {
         flexDirection: 'row',
@@ -594,8 +555,6 @@ const styles = StyleSheet.create({
         marginTop: SPACING.lg,
     },
     signOutText: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.error,
         fontWeight: '500',
     },
 });

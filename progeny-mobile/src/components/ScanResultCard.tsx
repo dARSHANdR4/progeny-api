@@ -19,10 +19,17 @@ interface ScanResultCardProps {
 }
 
 export default function ScanResultCard({ result }: ScanResultCardProps) {
-    const { colors, isDark, isHighContrast } = useTheme();
+    const { colors, isDark, isHighContrast, scaledTypography } = useTheme();
     const { t } = useLanguage();
     const confidencePercentage = (result.confidence_score * 100).toFixed(1);
-    const cropName = result.crop_type.charAt(0).toUpperCase() + result.crop_type.slice(1);
+
+    const cropKey = result.crop_type.toLowerCase();
+    const translatedCrop = t(cropKey);
+    const cropName = translatedCrop === cropKey ? (result.crop_type.charAt(0).toUpperCase() + result.crop_type.slice(1)) : translatedCrop;
+
+    const diseaseKey = result.disease_name.toLowerCase().replace(' ', '_');
+    const translatedDisease = t(diseaseKey);
+    const diseaseName = translatedDisease === diseaseKey ? result.disease_name : translatedDisease;
 
     return (
         <View style={[
@@ -36,34 +43,34 @@ export default function ScanResultCard({ result }: ScanResultCardProps) {
             <View style={[styles.header, { backgroundColor: colors.success + '20', borderBottomColor: colors.success + '40' }]}>
                 {/* @ts-ignore */}
                 <CheckCircle size={24} color={colors.success} />
-                <Text style={[styles.headerTitle, { color: colors.success }]}>{t('scan_results')} - {cropName}</Text>
+                <Text style={[styles.headerTitle, { color: colors.success }, scaledTypography.h3]}>{t('scan_results')} - {cropName}</Text>
             </View>
 
             <View style={styles.content}>
                 <View style={styles.resultRow}>
                     <View style={styles.resultItem}>
-                        <Text style={[styles.resultLabel, { color: colors.success }]}>{t('disease_detected')}:</Text>
-                        <Text style={[styles.resultValue, { color: colors.textPrimary }]}>{result.disease_name}</Text>
+                        <Text style={[styles.resultLabel, { color: colors.success }, scaledTypography.label]}>{t('disease_detected')}:</Text>
+                        <Text style={[styles.resultValue, { color: colors.textPrimary }, scaledTypography.body]}>{diseaseName}</Text>
                     </View>
                     <View style={styles.resultItem}>
-                        <Text style={[styles.resultLabel, { color: colors.success }]}>{t('confidence_score')}:</Text>
-                        <Text style={[styles.resultValue, { color: colors.textPrimary }]}>{confidencePercentage}%</Text>
+                        <Text style={[styles.resultLabel, { color: colors.success }, scaledTypography.label]}>{t('confidence_score')}:</Text>
+                        <Text style={[styles.resultValue, { color: colors.textPrimary }, scaledTypography.body]}>{confidencePercentage}%</Text>
                     </View>
                 </View>
 
                 <View style={styles.remediesSection}>
-                    <Text style={[styles.remediesTitle, { color: colors.success }]}>{t('recommended_remedies')}:</Text>
+                    <Text style={[styles.remediesTitle, { color: colors.success }, scaledTypography.label]}>{t('recommended_remedies')}:</Text>
                     <ScrollView style={styles.remediesList} nestedScrollEnabled>
                         {result.remedies.map((remedy, index) => (
                             <View key={index} style={styles.remedyItem}>
                                 <Text style={[styles.bulletPoint, { color: colors.success }]}>•</Text>
-                                <Text style={[styles.remedyText, { color: isHighContrast ? colors.textPrimary : colors.success }]}>{remedy}</Text>
+                                <Text style={[styles.remedyText, { color: isHighContrast ? colors.textPrimary : colors.success }, scaledTypography.body]}>{remedy}</Text>
                             </View>
                         ))}
                     </ScrollView>
                 </View>
 
-                <Text style={[styles.timestamp, { color: colors.textSecondary }]}>
+                <Text style={[styles.timestamp, { color: colors.textSecondary }, scaledTypography.caption]}>
                     {t('scanned_on')}: {new Date(result.created_at).toLocaleString()}
                 </Text>
             </View>

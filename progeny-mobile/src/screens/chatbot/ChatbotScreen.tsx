@@ -78,7 +78,7 @@ export default function ChatbotScreen() {
             console.error('Chat Error:', err);
             const errorMsg: Message = {
                 id: (Date.now() + 1).toString(),
-                text: "I'm sorry, I'm having trouble connecting to my brain right now. Please try again soon!",
+                text: t('chatbot_error'),
                 sender: 'bot',
                 timestamp: new Date(),
             };
@@ -153,7 +153,7 @@ export default function ChatbotScreen() {
                     </View>
                 </View>
                 <TouchableOpacity style={styles.clearBtn} onPress={() => setMessages(INITIAL_MESSAGES)}>
-                    <Text style={[styles.clearText, { color: colors.textSecondary }]}>Clear</Text>
+                    <Text style={[styles.clearText, { color: colors.textSecondary }, scaledTypography.caption]}>{t('clear')}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -211,7 +211,7 @@ export default function ChatbotScreen() {
 
             {isRecording && (
                 <View style={styles.recordingOverlay}>
-                    <Text style={styles.recordingText}>Listening...</Text>
+                    <Text style={[styles.recordingText, scaledTypography.body]}>{t('listening')}</Text>
                     <View style={[styles.voiceWave, { backgroundColor: colors.warning }]} />
                 </View>
             )}

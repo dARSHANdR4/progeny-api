@@ -2,12 +2,17 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, TYPOGRAPHY } from '../styles/theme';
 
-const PlaceholderScreen = ({ name }: { name: string }) => (
-    <View style={styles.container}>
-        <Text style={TYPOGRAPHY.h1}>{name}</Text>
-        <Text style={TYPOGRAPHY.bodySecondary}>Coming Soon</Text>
-    </View>
-);
+import { useLanguage } from '../contexts/LanguageContext';
+
+const PlaceholderScreen = ({ name }: { name: string }) => {
+    const { t } = useLanguage();
+    return (
+        <View style={styles.container}>
+            <Text style={TYPOGRAPHY.h1}>{name}</Text>
+            <Text style={TYPOGRAPHY.bodySecondary}>{t('coming_soon')}</Text>
+        </View>
+    );
+};
 
 export default PlaceholderScreen;
 

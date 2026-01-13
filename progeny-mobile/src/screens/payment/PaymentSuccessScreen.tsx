@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CheckCircle, XCircle, Home } from 'lucide-react-native';
-import { COLORS, SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
+import { SPACING, SHADOWS, TYPOGRAPHY } from '../../styles/theme';
 import { stripeService } from '../../services/stripe';
 import { useSubscription } from '../../contexts/SubscriptionContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface PaymentSuccessScreenProps {
     route?: {
@@ -16,6 +18,8 @@ interface PaymentSuccessScreenProps {
 }
 
 export default function PaymentSuccessScreen({ route, navigation }: PaymentSuccessScreenProps) {
+    const { colors, isHighContrast, scaledTypography } = useTheme();
+    const { t } = useLanguage();
     const [isVerifying, setIsVerifying] = useState(true);
     const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -31,10 +35,10 @@ export default function PaymentSuccessScreen({ route, navigation }: PaymentSucce
                     setIsSuccess(true);
                     await refreshUsage();
                 } else {
-                    setError('Payment verification failed. Please contact support.');
+                    setError(t('pay_verify_failed'));
                 }
             } catch (err) {
-                setError('An error occurred while verifying your payment.');
+                setError(t('pay_verify_error'));
             } finally {
                 setIsVerifying(false);
             }
@@ -49,51 +53,54 @@ export default function PaymentSuccessScreen({ route, navigation }: PaymentSucce
 
     if (isVerifying) {
         return (
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
                 <View style={styles.content}>
-                    <ActivityIndicator size="large" color={COLORS.primary} />
-                    <Text style={styles.loadingText}>Verifying your payment...</Text>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={[styles.loadingText, { color: colors.textSecondary }, scaledTypography.body]}>{t('verifying_payment')}</Text>
                 </View>
             </SafeAreaView>
         );
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={styles.content}>
                 {isSuccess ? (
                     <>
-                        <View style={styles.iconContainer}>
+                        <View style={[styles.iconContainer, { backgroundColor: isHighContrast ? '#000' : colors.success + '20', borderWidth: isHighContrast ? 2 : 0, borderColor: colors.success }]}>
                             {/* @ts-ignore */}
-                            <CheckCircle size={80} color={COLORS.success} />
+                            <CheckCircle size={80} color={colors.success} />
                         </View>
-                        <Text style={styles.title}>Payment Successful!</Text>
-                        <Text style={styles.subtitle}>
-                            Welcome to Progeny Premium! You now have access to unlimited scans and expert support.
+                        <Text style={[styles.title, { color: colors.textPrimary }, scaledTypography.h1]}>{t('payment_success')}</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }, scaledTypography.body]}>
+                            {t('payment_welcome')}
                         </Text>
-                        <View style={styles.benefitsCard}>
-                            <Text style={styles.benefitsTitle}>Your Premium Benefits:</Text>
-                            <Text style={styles.benefitItem}>✓ Unlimited disease scans</Text>
-                            <Text style={styles.benefitItem}>✓ Priority expert support</Text>
-                            <Text style={styles.benefitItem}>✓ Advanced treatment plans</Text>
-                            <Text style={styles.benefitItem}>✓ Voice AI Plus features</Text>
+                        <View style={[styles.benefitsCard, { backgroundColor: colors.surface, borderWidth: isHighContrast ? 2 : 0, borderColor: colors.border }]}>
+                            <Text style={[styles.benefitsTitle, { color: isHighContrast ? colors.textPrimary : colors.secondary }, scaledTypography.h3]}>{t('premium_benefits')}</Text>
+                            <Text style={[styles.benefitItem, { color: colors.textPrimary }, scaledTypography.body]}>{t('benefit_scans')}</Text>
+                            <Text style={[styles.benefitItem, { color: colors.textPrimary }, scaledTypography.body]}>{t('benefit_support')}</Text>
+                            <Text style={[styles.benefitItem, { color: colors.textPrimary }, scaledTypography.body]}>{t('benefit_remedies')}</Text>
+                            <Text style={[styles.benefitItem, { color: colors.textPrimary }, scaledTypography.body]}>{t('benefit_voice')}</Text>
                         </View>
                     </>
                 ) : (
                     <>
-                        <View style={styles.iconContainerError}>
+                        <View style={[styles.iconContainerError, { backgroundColor: isHighContrast ? '#000' : colors.error + '20', borderWidth: isHighContrast ? 2 : 0, borderColor: colors.error }]}>
                             {/* @ts-ignore */}
-                            <XCircle size={80} color={COLORS.error} />
+                            <XCircle size={80} color={colors.error} />
                         </View>
-                        <Text style={styles.title}>Payment Issue</Text>
-                        <Text style={styles.errorText}>{error}</Text>
+                        <Text style={[styles.title, { color: colors.textPrimary }, scaledTypography.h1]}>{t('payment_issue')}</Text>
+                        <Text style={[styles.errorText, { color: colors.error }, scaledTypography.body]}>{error}</Text>
                     </>
                 )}
 
-                <TouchableOpacity style={styles.homeButton} onPress={handleGoHome}>
+                <TouchableOpacity
+                    style={[styles.homeButton, { backgroundColor: colors.primary, borderWidth: isHighContrast ? 2 : 0, borderColor: '#000' }]}
+                    onPress={handleGoHome}
+                >
                     {/* @ts-ignore */}
-                    <Home size={20} color="#fff" />
-                    <Text style={styles.homeButtonText}>Go to Dashboard</Text>
+                    <Home size={20} color={isHighContrast ? '#000' : "#fff"} />
+                    <Text style={[styles.homeButtonText, { color: isHighContrast ? '#000' : "#fff" }, scaledTypography.body]}>{t('go_dashboard')}</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
@@ -103,7 +110,6 @@ export default function PaymentSuccessScreen({ route, navigation }: PaymentSucce
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
     },
     content: {
         flex: 1,
@@ -115,7 +121,6 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: COLORS.successLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: SPACING.xl,
@@ -124,36 +129,26 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: COLORS.errorLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: SPACING.xl,
     },
     title: {
-        ...TYPOGRAPHY.h1,
-        color: COLORS.textPrimary,
         textAlign: 'center',
         marginBottom: SPACING.md,
     },
     subtitle: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.textSecondary,
         textAlign: 'center',
         marginBottom: SPACING.xl,
     },
     errorText: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.error,
         textAlign: 'center',
         marginBottom: SPACING.xl,
     },
     loadingText: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.textSecondary,
         marginTop: SPACING.lg,
     },
     benefitsCard: {
-        backgroundColor: COLORS.surface,
         padding: SPACING.lg,
         borderRadius: 16,
         width: '100%',
@@ -161,19 +156,14 @@ const styles = StyleSheet.create({
         ...SHADOWS.medium,
     },
     benefitsTitle: {
-        ...TYPOGRAPHY.h3,
-        color: COLORS.premiumPurple,
         marginBottom: SPACING.md,
     },
     benefitItem: {
-        ...TYPOGRAPHY.body,
-        color: COLORS.textPrimary,
         marginBottom: SPACING.xs,
     },
     homeButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.primary,
         paddingVertical: SPACING.md,
         paddingHorizontal: SPACING.xl,
         borderRadius: 12,
@@ -181,7 +171,6 @@ const styles = StyleSheet.create({
         ...SHADOWS.small,
     },
     homeButtonText: {
-        color: '#fff',
         fontWeight: 'bold',
         fontSize: 16,
     },

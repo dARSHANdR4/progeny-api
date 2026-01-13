@@ -2,7 +2,7 @@ import { supabase, IS_DEMO_MODE } from '../lib/supabase';
 
 // API Configuration
 // Point this to your Next.js backend URL
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://progeny-api.vercel.app';
 
 // Demo mock data
 const DEMO_HISTORY = [

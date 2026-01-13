@@ -185,13 +185,14 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         h1: { ...TYPOGRAPHY.h1, fontSize: getScaledFontSize(28) },
         h2: { ...TYPOGRAPHY.h2, fontSize: getScaledFontSize(22) },
         h3: { ...TYPOGRAPHY.h3, fontSize: getScaledFontSize(18) },
-        h4: { fontSize: getScaledFontSize(16), fontWeight: '600' as const },
+        h4: { ...TYPOGRAPHY.h3, fontSize: getScaledFontSize(16), fontWeight: '600' as const },
         body: { ...TYPOGRAPHY.body, fontSize: getScaledFontSize(14) },
         bodySmall: { ...TYPOGRAPHY.bodySmall, fontSize: getScaledFontSize(13) },
         bodySecondary: { ...TYPOGRAPHY.bodySecondary, fontSize: getScaledFontSize(12) },
         label: { ...TYPOGRAPHY.label, fontSize: getScaledFontSize(14) },
         caption: { ...TYPOGRAPHY.caption, fontSize: getScaledFontSize(10) },
     }), [textScale]);
+
 
     return (
         <ThemeContext.Provider

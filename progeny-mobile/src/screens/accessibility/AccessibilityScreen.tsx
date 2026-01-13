@@ -46,7 +46,7 @@ export default function AccessibilityScreen() {
 
     const handleExportData = async () => {
         if (isDemoMode) {
-            Alert.alert('Demo Mode', 'Data export is disabled in demo mode.');
+            Alert.alert(t('demo_mode'), t('data_export_disabled'));
             return;
         }
 
@@ -57,11 +57,11 @@ export default function AccessibilityScreen() {
                 const jsonString = JSON.stringify(result.data, null, 2);
                 await Share.share({
                     message: jsonString,
-                    title: 'Progeny Data Export',
+                    title: t('export_my_data'),
                 });
             }
         } catch (error: any) {
-            Alert.alert('Error', error.message || 'Failed to export data.');
+            Alert.alert(t('error'), error.message || t('something_went_wrong'));
         } finally {
             setIsExporting(false);
         }
@@ -72,19 +72,19 @@ export default function AccessibilityScreen() {
     const handleSignOut = () => {
         if (isDemoMode) {
             Alert.alert(
-                'Demo Mode',
-                'Sign out is disabled in demo mode. In the real app, this would log you out.',
-                [{ text: 'OK' }]
+                t('demo_mode'),
+                t('data_export_disabled'), // Reusing for signout disabled
+                [{ text: t('ok') }]
             );
             return;
         }
 
         Alert.alert(
-            'Sign Out',
-            'Are you sure you want to sign out?',
+            t('sign_out_confirm'),
+            t('sign_out_confirm_msg'),
             [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Sign Out', style: 'destructive', onPress: () => signOut() }
+                { text: t('cancel'), style: 'cancel' },
+                { text: t('sign_out'), style: 'destructive', onPress: () => signOut() }
             ]
         );
     };
@@ -92,43 +92,43 @@ export default function AccessibilityScreen() {
     const handleDeleteAccount = () => {
         if (isDemoMode) {
             Alert.alert(
-                'Demo Mode',
-                'Account deletion is disabled in demo mode.',
-                [{ text: 'OK' }]
+                t('demo_mode'),
+                t('data_export_disabled'), // Reusing for deletion disabled
+                [{ text: t('ok') }]
             );
             return;
         }
 
         // First confirmation
         Alert.alert(
-            '⚠️ Delete Account',
-            'This will permanently delete your account and ALL your data including:\n\n• Scan history\n• Posts & comments\n• Subscription (no refunds)\n• All personal information\n\nThis action CANNOT be undone!',
+            `⚠️ ${t('delete_account')}`,
+            t('delete_confirm_msg'),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('cancel'), style: 'cancel' },
                 {
-                    text: 'Delete My Account',
+                    text: t('delete_account'),
                     style: 'destructive',
                     onPress: () => {
                         // Second confirmation
                         Alert.alert(
-                            '🚨 Final Confirmation',
-                            'Are you ABSOLUTELY SURE you want to delete your account? Your data will be gone forever.',
+                            `🚨 ${t('delete_final_confirm')}`,
+                            t('delete_final_msg'),
                             [
-                                { text: 'No, Keep My Account', style: 'cancel' },
+                                { text: t('cancel'), style: 'cancel' },
                                 {
-                                    text: 'Yes, Delete Forever',
+                                    text: t('yes_delete'),
                                     style: 'destructive',
                                     onPress: async () => {
                                         setIsDeleting(true);
                                         try {
                                             await accountApi.deleteAccount();
                                             Alert.alert(
-                                                'Account Deleted',
-                                                'Your account and all data have been permanently deleted. Thank you for using Progeny.',
-                                                [{ text: 'OK', onPress: () => signOut() }]
+                                                t('delete_account_success'),
+                                                t('delete_account_success_msg'),
+                                                [{ text: t('ok'), onPress: () => signOut() }]
                                             );
                                         } catch (error: any) {
-                                            Alert.alert('Error', error.message || 'Failed to delete account. Please try again.');
+                                            Alert.alert(t('error'), error.message || t('something_went_wrong'));
                                         } finally {
                                             setIsDeleting(false);
                                         }
@@ -156,9 +156,10 @@ export default function AccessibilityScreen() {
         header: { backgroundColor: colors.surface, borderBottomColor: colors.border },
         title: { color: colors.textPrimary, ...scaledTypography.h2 },
         section: { backgroundColor: colors.surface },
-        sectionTitle: { color: colors.textPrimary, ...scaledTypography.h3 },
+        sectionTitle: { color: colors.primary, ...scaledTypography.h3 },
         settingLabel: { color: colors.textPrimary, ...scaledTypography.body },
         settingValue: { color: colors.textSecondary, ...scaledTypography.body },
+        modalTitle: { color: colors.textPrimary, ...scaledTypography.h3, marginBottom: SPACING.md, textAlign: 'center' },
     };
 
     return (
@@ -177,10 +178,10 @@ export default function AccessibilityScreen() {
                         <Crown size={32} color={premiumColor} />
                         <View style={styles.bannerText}>
                             <Text style={[styles.bannerTitle, { color: premiumColor }]}>
-                                {isPremium ? 'Progeny Premium' : t('unlock_premium')}
+                                {isPremium ? t('progeny_premium') : t('unlock_premium')}
                             </Text>
                             <Text style={[styles.bannerDesc, { color: colors.textSecondary }]}>
-                                {isPremium ? 'Thank you for supporting sustainable farming!' : t('premium_desc')}
+                                {isPremium ? t('premium_thank_you') : t('unlock_description')}
                             </Text>
                         </View>
                         {!isPremium && (
@@ -271,9 +272,9 @@ export default function AccessibilityScreen() {
                     <View style={[styles.settingItem, { borderBottomColor: colors.border, flexDirection: 'column', alignItems: 'stretch' }]}>
                         <View style={styles.textSizeHeader}>
                             {/* @ts-ignore */}
-                            <Type size={18} color={colors.textPrimary} />
+                            <Type size={18} color={isHighContrast ? colors.primary : colors.textPrimary} />
                             <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('text_size')}</Text>
-                            <Text style={[styles.textSizeValue, { color: colors.primary }]}>{Math.round(textScale * 100)}%</Text>
+                            <Text style={[styles.textSizeValue, { color: colors.primary, ...scaledTypography.body }]}>{Math.round(textScale * 100)}%</Text>
                         </View>
                         <View style={styles.sliderContainer}>
                             <Text style={[styles.sliderLabel, { color: colors.textSecondary }]}>A-</Text>
@@ -404,9 +405,9 @@ export default function AccessibilityScreen() {
                 </TouchableOpacity>
 
                 <View style={styles.aboutContainer}>
-                    <Text style={[styles.versionTxt, { color: colors.textSecondary }]}>Progeny Mobile v1.0.0</Text>
-                    <Text style={[styles.copyrightTxt, { color: colors.textSecondary }]}>© 2026 Progeny AI Technologies</Text>
-                    {isDemoMode && <Text style={styles.demoTxt}>🎮 DEMO MODE</Text>}
+                    <Text style={[styles.versionTxt, { color: colors.textSecondary }]}>{t('progeny_version')}</Text>
+                    <Text style={[styles.copyrightTxt, { color: colors.textSecondary }]}>{t('copyright_text')}</Text>
+                    {isDemoMode && <Text style={styles.demoTxt}>{t('demo_mode_tag')}</Text>}
 
                 </View>
             </ScrollView>
@@ -418,7 +419,7 @@ export default function AccessibilityScreen() {
                 <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
                     <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
                         <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>About Progeny</Text>
+                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>{t('about_progeny')}</Text>
                             <TouchableOpacity onPress={() => setShowAboutModal(false)}>
                                 {/* @ts-ignore */}
                                 <X size={24} color={colors.textPrimary} />
@@ -427,54 +428,54 @@ export default function AccessibilityScreen() {
 
                         <ScrollView style={styles.modalScrollContent}>
                             <Text style={[styles.aboutDesc, { color: colors.textSecondary }]}>
-                                Progeny is an AI-powered plant disease detection platform designed specifically for modern farmers.
+                                {t('about_desc')}
                             </Text>
 
                             <View style={styles.featureList}>
                                 <View style={[styles.featureItem, { backgroundColor: colors.background }]}>
                                     <Text style={styles.featureIcon}>⚡</Text>
                                     <View style={styles.featureText}>
-                                        <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Instant Disease Detection</Text>
-                                        <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>Get accurate diagnosis in seconds using AI</Text>
+                                        <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>{t('instant_detection')}</Text>
+                                        <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{t('instant_detection_desc')}</Text>
                                     </View>
                                 </View>
 
                                 <View style={[styles.featureItem, { backgroundColor: colors.background }]}>
                                     <Text style={styles.featureIcon}>📱</Text>
                                     <View style={styles.featureText}>
-                                        <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>User-Friendly Interface</Text>
-                                        <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>Simple design that works on any device</Text>
+                                        <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>{t('user_friendly')}</Text>
+                                        <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{t('user_friendly_desc')}</Text>
                                     </View>
                                 </View>
 
                                 <View style={[styles.featureItem, { backgroundColor: colors.background }]}>
                                     <Text style={styles.featureIcon}>🌱</Text>
                                     <View style={styles.featureText}>
-                                        <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Treatment Recommendations</Text>
-                                        <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>Actionable treatment and prevention tips</Text>
+                                        <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>{t('treatment_tips')}</Text>
+                                        <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{t('treatment_tips_desc')}</Text>
                                     </View>
                                 </View>
                             </View>
 
-                            <Text style={[styles.howItWorks, { color: colors.textPrimary }]}>How It Works</Text>
+                            <Text style={[styles.howItWorks, { color: colors.textPrimary }]}>{t('how_it_works')}</Text>
                             <View style={styles.stepsContainer}>
                                 <View style={styles.stepItem}>
                                     <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
                                         <Text style={[styles.stepNumberText, { color: isHighContrast ? '#000' : '#fff' }]}>1</Text>
                                     </View>
-                                    <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Capture Image</Text>
+                                    <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>{t('capture_image')}</Text>
                                 </View>
                                 <View style={styles.stepItem}>
                                     <View style={[styles.stepNumber, { backgroundColor: '#22C55E' }]}>
                                         <Text style={styles.stepNumberText}>2</Text>
                                     </View>
-                                    <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>AI Analysis</Text>
+                                    <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>{t('ai_analysis')}</Text>
                                 </View>
                                 <View style={styles.stepItem}>
                                     <View style={[styles.stepNumber, { backgroundColor: '#F97316' }]}>
                                         <Text style={styles.stepNumberText}>3</Text>
                                     </View>
-                                    <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Get Results</Text>
+                                    <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>{t('get_results')}</Text>
                                 </View>
                             </View>
                         </ScrollView>
@@ -487,7 +488,7 @@ export default function AccessibilityScreen() {
                 <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
                     <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
                         <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Contact Support</Text>
+                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>{t('contact_support')}</Text>
                             <TouchableOpacity onPress={() => setShowContactModal(false)}>
                                 {/* @ts-ignore */}
                                 <X size={24} color={colors.textPrimary} />
@@ -495,7 +496,7 @@ export default function AccessibilityScreen() {
                         </View>
 
                         <Text style={[styles.contactDesc, { color: colors.textSecondary }]}>
-                            For urgent issues or account-related inquiries, please contact our team directly.
+                            {t('contact_desc')}
                         </Text>
 
                         <ScrollView style={styles.modalScrollContent}>
@@ -513,7 +514,7 @@ export default function AccessibilityScreen() {
                                         >
                                             {/* @ts-ignore */}
                                             <Mail size={16} color={isHighContrast ? '#000' : '#fff'} />
-                                            <Text style={[styles.contactBtnText, { color: isHighContrast ? '#000' : '#fff' }]}>Email</Text>
+                                            <Text style={[styles.contactBtnText, { color: isHighContrast ? '#000' : '#fff' }]}>{t('email_btn')}</Text>
                                         </TouchableOpacity>
 
                                         <TouchableOpacity
@@ -522,7 +523,7 @@ export default function AccessibilityScreen() {
                                         >
                                             {/* @ts-ignore */}
                                             <Phone size={16} color="#fff" />
-                                            <Text style={styles.contactBtnText}>Call</Text>
+                                            <Text style={styles.contactBtnText}>{t('call_btn')}</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>

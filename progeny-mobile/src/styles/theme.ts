@@ -40,38 +40,30 @@ export const TYPOGRAPHY: Record<string, TextStyle> = {
   h1: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
   },
   h2: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.text,
   },
   h3: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.text,
   },
   body: {
     fontSize: 14,
-    color: COLORS.text,
   },
   bodySmall: {
     fontSize: 13,
-    color: COLORS.text,
   },
   bodySecondary: {
     fontSize: 12,
-    color: COLORS.textSecondary,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.text,
   },
   caption: {
     fontSize: 10,
-    color: COLORS.textSecondary,
   },
 };
 
