@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 
@@ -19,17 +19,33 @@ export async function POST(request: NextRequest) {
 
         console.log("[DEBUG] Creating Supabase client")
         const supabase = await createClient()
+        const adminSupabase = await createAdminClient()
 
-        // Get current user first
+        // Get current user - Support Bearer Token for mobile and Cookies for web
         console.log("[DEBUG] Getting user authentication")
-        const {
-            data: { user },
-            error: authError,
-        } = await supabase.auth.getUser()
+        let user = null;
+        const authHeader = request.headers.get("Authorization");
 
-        if (authError) {
-            console.error("[ERROR] Authentication error:", authError)
-            return NextResponse.json({ error: "Authentication failed" }, { status: 401 })
+        if (authHeader?.startsWith("Bearer ")) {
+            const token = authHeader.substring(7);
+            const { data: { user: authUser }, error: tokenError } = await supabase.auth.getUser(token);
+            if (!tokenError && authUser) {
+                user = authUser;
+                console.log("[DEBUG] User authenticated via Bearer token:", user.id);
+            }
+        }
+
+        // Fallback to cookie-based auth
+        if (!user) {
+            const {
+                data: { user: cookieUser },
+                error: authError,
+            } = await supabase.auth.getUser()
+
+            if (!authError && cookieUser) {
+                user = cookieUser;
+                console.log("[DEBUG] User authenticated via cookie:", user.id);
+            }
         }
 
         if (!user) {
@@ -38,6 +54,7 @@ export async function POST(request: NextRequest) {
         }
 
         console.log("[DEBUG] User authenticated:", user.id)
+
 
         // Parse request body
         let requestData;

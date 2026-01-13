@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { useAuth } from './AuthContext';
 import { IS_DEMO_MODE } from '../lib/supabase';
 
@@ -35,6 +36,25 @@ interface SubscriptionProviderProps {
 
 export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     const { profile, usage, subscription, isAuthenticated, isAdmin, isPremium, refreshUserData, canScan } = useAuth();
+    const appState = useRef(AppState.currentState);
+
+    // Auto-refresh subscription when app returns to foreground (e.g., after browser payment)
+    useEffect(() => {
+        const handleAppStateChange = (nextAppState: AppStateStatus) => {
+            if (
+                appState.current.match(/inactive|background/) &&
+                nextAppState === 'active' &&
+                isAuthenticated
+            ) {
+                console.log('[SubscriptionContext] App returned to foreground, refreshing subscription...');
+                refreshUserData();
+            }
+            appState.current = nextAppState;
+        };
+
+        const subscription = AppState.addEventListener('change', handleAppStateChange);
+        return () => subscription.remove();
+    }, [isAuthenticated, refreshUserData]);
 
     const userRole = isAdmin ? 'admin' : (isPremium ? 'premium' : 'basic');
     const dailyLimit = usage?.daily_limit || 5;

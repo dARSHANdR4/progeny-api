@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -9,12 +9,18 @@ import {
     ActivityIndicator,
     Alert,
     Linking,
+    AppState,
+    AppStateStatus,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { X, Check, Crown, Zap, Shield } from 'lucide-react-native';
 import { SPACING, TYPOGRAPHY, SHADOWS } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { paymentApi } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+
+const PENDING_SESSION_KEY = '@progeny_pending_session';
 
 interface SubscriptionModalProps {
     visible: boolean;
@@ -26,6 +32,8 @@ interface SubscriptionModalProps {
 export default function SubscriptionModal({ visible, onClose }: SubscriptionModalProps) {
     const { colors, isDark, isHighContrast } = useTheme();
     const { t } = useLanguage();
+    const { refreshUserData } = useAuth();
+    const appState = useRef(AppState.currentState);
 
     const PREMIUM_FEATURES = [
         { title: t('feature_unlimited'), description: t('feature_unlimited_desc'), icon: Zap },
@@ -36,14 +44,74 @@ export default function SubscriptionModal({ visible, onClose }: SubscriptionModa
 
     const [isLoading, setIsLoading] = React.useState(false);
 
+    // Check for pending payment when app returns to foreground
+    useEffect(() => {
+        const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+            if (
+                appState.current.match(/inactive|background/) &&
+                nextAppState === 'active'
+            ) {
+                console.log('[Payment] App returned to foreground, checking for pending payment...');
+                await verifyPendingPayment();
+            }
+            appState.current = nextAppState;
+        };
+
+        const subscription = AppState.addEventListener('change', handleAppStateChange);
+        return () => subscription.remove();
+    }, []);
+
+    // Verify pending payment on mount as well (in case user switches apps quickly)
+    useEffect(() => {
+        if (visible) {
+            verifyPendingPayment();
+        }
+    }, [visible]);
+
+    const verifyPendingPayment = async () => {
+        try {
+            const pendingSession = await AsyncStorage.getItem(PENDING_SESSION_KEY);
+            if (!pendingSession) {
+                console.log('[Payment] No pending session found');
+                return;
+            }
+
+            console.log('[Payment] Found pending session:', pendingSession);
+
+            // Clear the pending session first to prevent multiple verification attempts
+            await AsyncStorage.removeItem(PENDING_SESSION_KEY);
+
+            setIsLoading(true);
+            const result = await paymentApi.verifyPayment(pendingSession);
+            console.log('[Payment] Verification result:', result);
+
+            if (result.success) {
+                Alert.alert(
+                    'Payment Successful! 🎉',
+                    'Your premium subscription has been activated.',
+                    [{ text: 'OK', onPress: () => { refreshUserData(); onClose(); } }]
+                );
+            }
+        } catch (error: any) {
+            console.error('[Payment] Verification error:', error);
+            // Don't show error - may fail if payment not yet completed
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleUpgrade = async () => {
         setIsLoading(true);
         try {
             const data = await paymentApi.createCheckout('premium_monthly');
-            if (data?.url) {
+            if (data?.url && data?.sessionId) {
+                // Store the sessionId BEFORE opening browser
+                await AsyncStorage.setItem(PENDING_SESSION_KEY, data.sessionId);
+                console.log('[Payment] Stored sessionId:', data.sessionId);
+
                 Alert.alert(
                     'Checkout Initiated',
-                    'Redirecting to secure payment page...',
+                    'Redirecting to secure payment page. After payment, return here to activate your subscription.',
                     [
                         {
                             text: 'OK',

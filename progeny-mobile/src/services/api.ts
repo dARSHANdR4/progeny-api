@@ -201,7 +201,15 @@ export const paymentApi = {
         if (IS_DEMO_MODE) {
             return Promise.resolve({ success: true, subscription: { plan: 'premium' } });
         }
-        return fetchWithAuth(`/api/payment/verify?session_id=${sessionId}`);
+        return fetchWithAuth('/api/payment/verify', {
+            method: 'POST',
+            body: JSON.stringify({
+                stripe_session_id: sessionId,
+                plan_type: 'premium_monthly',
+                scans: '100',
+                duration_days: '28'
+            }),
+        });
     },
 };
 
