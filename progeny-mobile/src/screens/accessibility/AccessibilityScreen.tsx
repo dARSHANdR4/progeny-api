@@ -272,7 +272,7 @@ export default function AccessibilityScreen() {
                         <View style={styles.textSizeHeader}>
                             {/* @ts-ignore */}
                             <Type size={18} color={colors.textPrimary} />
-                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Text Size</Text>
+                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('text_size')}</Text>
                             <Text style={[styles.textSizeValue, { color: colors.primary }]}>{Math.round(textScale * 100)}%</Text>
                         </View>
                         <View style={styles.sliderContainer}>
@@ -298,7 +298,7 @@ export default function AccessibilityScreen() {
                     <View style={styles.sectionHeader}>
                         {/* @ts-ignore */}
                         <Download size={20} color={colors.primary} />
-                        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Your Data</Text>
+                        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t('your_data')}</Text>
                     </View>
 
                     <TouchableOpacity
@@ -306,7 +306,7 @@ export default function AccessibilityScreen() {
                         onPress={handleExportData}
                         disabled={isExporting}
                     >
-                        <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Export My Data</Text>
+                        <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('export_my_data')}</Text>
                         {isExporting ? (
                             <ActivityIndicator size="small" color={colors.primary} />
                         ) : (
@@ -322,7 +322,7 @@ export default function AccessibilityScreen() {
                     <View style={styles.sectionHeader}>
                         {/* @ts-ignore */}
                         <Link2 size={20} color={colors.primary} />
-                        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Links</Text>
+                        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t('links')}</Text>
                     </View>
 
                     <TouchableOpacity
@@ -332,7 +332,7 @@ export default function AccessibilityScreen() {
                         <View style={styles.linkItem}>
                             {/* @ts-ignore */}
                             <Github size={18} color={colors.textPrimary} />
-                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>GitHub Repository</Text>
+                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('github_repository')}</Text>
                         </View>
                         {/* @ts-ignore */}
                         <ExternalLink size={16} color={colors.textSecondary} />
@@ -345,7 +345,7 @@ export default function AccessibilityScreen() {
                         <View style={styles.linkItem}>
                             {/* @ts-ignore */}
                             <Crown size={18} color={premiumColor} />
-                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Progeny Website</Text>
+                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('progeny_website')}</Text>
                         </View>
                         {/* @ts-ignore */}
                         <ExternalLink size={16} color={colors.textSecondary} />
@@ -358,7 +358,7 @@ export default function AccessibilityScreen() {
                         <View style={styles.linkItem}>
                             {/* @ts-ignore */}
                             <Info size={18} color={colors.textPrimary} />
-                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>About Us</Text>
+                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('about_us')}</Text>
                         </View>
                         {/* @ts-ignore */}
                         <ExternalLink size={16} color={colors.textSecondary} />
@@ -371,7 +371,7 @@ export default function AccessibilityScreen() {
                         <View style={styles.linkItem}>
                             {/* @ts-ignore */}
                             <Users size={18} color={colors.textPrimary} />
-                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Contact Support</Text>
+                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>{t('contact_support')}</Text>
                         </View>
                         {/* @ts-ignore */}
                         <ExternalLink size={16} color={colors.textSecondary} />
@@ -398,7 +398,7 @@ export default function AccessibilityScreen() {
                         <>
                             {/* @ts-ignore */}
                             <Trash2 size={20} color={isHighContrast ? "#000" : "#fff"} />
-                            <Text style={[styles.deleteAccountTxt, { color: isHighContrast ? "#000" : "#fff" }]}>Delete Account</Text>
+                            <Text style={[styles.deleteAccountTxt, { color: isHighContrast ? "#000" : "#fff" }]}>{t('delete_account')}</Text>
                         </>
                     )}
                 </TouchableOpacity>

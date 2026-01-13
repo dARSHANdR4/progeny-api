@@ -142,7 +142,47 @@ export const translations = {
         send_reset_link: 'Send Reset Link',
         reset_email_sent_desc: 'If an account exists for this email, you will receive a password reset link shortly.',
         ok: 'OK',
+
+        // New Accessibility Features
+        links: 'Links',
+        github_repository: 'GitHub Repository',
+        progeny_website: 'Progeny Website',
+        about_us: 'About Us',
+        contact_support: 'Contact Support',
+        text_size: 'Text Size',
+        your_data: 'Your Data',
+        export_my_data: 'Export My Data',
+        delete_account: 'Delete Account',
+
+        // About Modal
+        about_progeny: 'About Progeny',
+        about_desc: 'Progeny is an AI-powered plant disease detection platform designed specifically for modern farmers.',
+        instant_detection: 'Instant Disease Detection',
+        instant_detection_desc: 'Get accurate diagnosis in seconds using AI',
+        user_friendly: 'User-Friendly Interface',
+        user_friendly_desc: 'Simple design that works on any device',
+        treatment_tips: 'Treatment Recommendations',
+        treatment_tips_desc: 'Actionable treatment and prevention tips',
+        how_it_works: 'How It Works',
+        capture_image: 'Capture Image',
+        ai_analysis: 'AI Analysis',
+        get_results: 'Get Results',
+
+        // Contact Modal
+        contact_desc: 'For urgent issues or account-related inquiries, please contact our team directly.',
+        email_btn: 'Email',
+        call_btn: 'Call',
+
+        // Delete Account
+        delete_confirm_title: 'Delete Account?',
+        delete_confirm_msg: 'Are you sure you want to permanently delete your account? This will remove all your data including scans, posts, and profile. This action cannot be undone.',
+        delete_final_confirm: 'Final Confirmation',
+        delete_final_msg: 'This is your LAST CHANCE. All your data will be permanently deleted. Are you absolutely sure?',
+        yes_delete: 'Yes, Delete',
+        demo_mode: 'Demo Mode',
+        data_export_disabled: 'Data export is disabled in demo mode.',
     },
+
     hi: {
         // Navigation
         detection: 'जांच',
@@ -284,8 +324,42 @@ export const translations = {
         send_reset_link: 'रीसेट लिंक भेजें',
         reset_email_sent_desc: 'यदि इस ईमेल के लिए कोई खाता मौजूद है, तो आपको शीघ्र ही पासवर्ड रीसेट लिंक प्राप्त होगा।',
         ok: 'ठीक है',
+
+        // New Accessibility Features
+        links: 'लिंक्स',
+        github_repository: 'गिटहब रिपॉजिटरी',
+        progeny_website: 'प्रोजेनी वेबसाइट',
+        about_us: 'हमारे बारे में',
+        contact_support: 'सहायता से संपर्क करें',
+        text_size: 'टेक्स्ट साइज़',
+        your_data: 'आपका डेटा',
+        export_my_data: 'मेरा डेटा निर्यात करें',
+        delete_account: 'खाता हटाएं',
+        about_progeny: 'प्रोजेनी के बारे में',
+        about_desc: 'प्रोजेनी एक एआई-संचालित पौधों की बीमारी का पता लगाने वाला प्लेटफॉर्म है जो आधुनिक किसानों के लिए डिज़ाइन किया गया है।',
+        instant_detection: 'तत्काल बीमारी का पता लगाना',
+        instant_detection_desc: 'एआई का उपयोग करके सेकंडों में सटीक निदान प्राप्त करें',
+        user_friendly: 'उपयोगकर्ता के अनुकूल इंटरफेस',
+        user_friendly_desc: 'सरल डिज़ाइन जो किसी भी डिवाइस पर काम करता है',
+        treatment_tips: 'उपचार सिफारिशें',
+        treatment_tips_desc: 'उपचार और रोकथाम युक्तियाँ',
+        how_it_works: 'यह कैसे काम करता है',
+        capture_image: 'छवि कैप्चर करें',
+        ai_analysis: 'एआई विश्लेषण',
+        get_results: 'परिणाम प्राप्त करें',
+        contact_desc: 'तत्काल समस्याओं या खाता संबंधी पूछताछ के लिए, कृपया सीधे हमारी टीम से संपर्क करें।',
+        email_btn: 'ईमेल',
+        call_btn: 'कॉल',
+        delete_confirm_title: 'खाता हटाएं?',
+        delete_confirm_msg: 'क्या आप वाकई अपना खाता स्थायी रूप से हटाना चाहते हैं? यह आपके सभी डेटा को हटा देगा। यह क्रिया पूर्ववत नहीं की जा सकती।',
+        delete_final_confirm: 'अंतिम पुष्टि',
+        delete_final_msg: 'यह आपका आखिरी मौका है। आपका सारा डेटा स्थायी रूप से हटा दिया जाएगा। क्या आप पूरी तरह निश्चित हैं?',
+        yes_delete: 'हाँ, हटाएं',
+        demo_mode: 'डेमो मोड',
+        data_export_disabled: 'डेमो मोड में डेटा निर्यात अक्षम है।',
     },
     te: {
+
         // Navigation
         detection: 'గుర్తింపు',
         history: 'చరిత్ర',
