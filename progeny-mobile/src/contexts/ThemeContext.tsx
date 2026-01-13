@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useColorScheme } from 'react-native';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import { useColorScheme, TextStyle } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { COLORS } from '../styles/theme';
+import { COLORS, TYPOGRAPHY } from '../styles/theme';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -18,17 +18,32 @@ interface ThemeColors {
     warning: string;
 }
 
+interface ScaledTypography {
+    h1: TextStyle;
+    h2: TextStyle;
+    h3: TextStyle;
+    h4: TextStyle;
+    body: TextStyle;
+    bodySmall: TextStyle;
+    bodySecondary: TextStyle;
+    label: TextStyle;
+    caption: TextStyle;
+}
+
 interface ThemeContextType {
     mode: ThemeMode;
     isDark: boolean;
     isHighContrast: boolean;
     colors: ThemeColors;
     textScale: number;
+    scaledTypography: ScaledTypography;
+    getScaledFontSize: (baseSize: number) => number;
     setMode: (mode: ThemeMode) => void;
     toggleTheme: () => void;
     toggleHighContrast: () => void;
     setTextScale: (scale: number) => void;
 }
+
 
 const lightColors: ThemeColors = {
     primary: COLORS.primary,
@@ -160,6 +175,24 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
     };
 
+    // Helper function to scale any font size
+    const getScaledFontSize = (baseSize: number): number => {
+        return Math.round(baseSize * textScale);
+    };
+
+    // Create scaled typography object using useMemo for performance
+    const scaledTypography: ScaledTypography = useMemo(() => ({
+        h1: { ...TYPOGRAPHY.h1, fontSize: getScaledFontSize(28) },
+        h2: { ...TYPOGRAPHY.h2, fontSize: getScaledFontSize(22) },
+        h3: { ...TYPOGRAPHY.h3, fontSize: getScaledFontSize(18) },
+        h4: { fontSize: getScaledFontSize(16), fontWeight: '600' as const },
+        body: { ...TYPOGRAPHY.body, fontSize: getScaledFontSize(14) },
+        bodySmall: { ...TYPOGRAPHY.bodySmall, fontSize: getScaledFontSize(13) },
+        bodySecondary: { ...TYPOGRAPHY.bodySecondary, fontSize: getScaledFontSize(12) },
+        label: { ...TYPOGRAPHY.label, fontSize: getScaledFontSize(14) },
+        caption: { ...TYPOGRAPHY.caption, fontSize: getScaledFontSize(10) },
+    }), [textScale]);
+
     return (
         <ThemeContext.Provider
             value={{
@@ -168,6 +201,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
                 isHighContrast,
                 colors,
                 textScale,
+                scaledTypography,
+                getScaledFontSize,
                 setMode,
                 toggleTheme,
                 toggleHighContrast,
@@ -177,6 +212,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
             {children}
         </ThemeContext.Provider>
     );
+
 }
 
 export function useTheme() {

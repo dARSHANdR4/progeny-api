@@ -33,7 +33,7 @@ const PROGENY_WEBSITE_URL = 'https://progeny-api.vercel.app';
 
 export default function AccessibilityScreen() {
     const { isPremium, signOut, isDemoMode } = useAuth();
-    const { isDark, toggleTheme, isHighContrast, toggleHighContrast, colors, textScale, setTextScale } = useTheme();
+    const { isDark, toggleTheme, isHighContrast, toggleHighContrast, colors, textScale, setTextScale, scaledTypography } = useTheme();
     const { language, setLanguage, t } = useLanguage();
     const [showSubscription, setShowSubscription] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
@@ -150,15 +150,15 @@ export default function AccessibilityScreen() {
 
     const currentLanguage = LANGUAGES.find(l => l.code === language)?.name || 'English';
 
-    // Dynamic styles based on theme
+    // Dynamic styles based on theme and text scale
     const dynamicStyles = {
         container: { backgroundColor: colors.background },
         header: { backgroundColor: colors.surface, borderBottomColor: colors.border },
-        title: { color: colors.textPrimary },
+        title: { color: colors.textPrimary, ...scaledTypography.h2 },
         section: { backgroundColor: colors.surface },
-        sectionTitle: { color: colors.textPrimary },
-        settingLabel: { color: colors.textPrimary },
-        settingValue: { color: colors.textSecondary },
+        sectionTitle: { color: colors.textPrimary, ...scaledTypography.h3 },
+        settingLabel: { color: colors.textPrimary, ...scaledTypography.body },
+        settingValue: { color: colors.textSecondary, ...scaledTypography.body },
     };
 
     return (
