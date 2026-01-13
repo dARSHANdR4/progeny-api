@@ -27,7 +27,7 @@ interface Message {
 // Initial messages moved inside component to support localization
 
 export default function ChatbotScreen() {
-    const { colors, isHighContrast } = useTheme();
+    const { colors, isHighContrast, scaledTypography } = useTheme();
     const { t } = useLanguage();
 
     const INITIAL_MESSAGES: Message[] = [
@@ -114,7 +114,7 @@ export default function ChatbotScreen() {
                         ? [styles.botBubble, { backgroundColor: colors.surface, borderWidth: isHighContrast ? 1 : 0, borderColor: colors.border }]
                         : [styles.userBubble, { backgroundColor: colors.primary, borderWidth: isHighContrast ? 1 : 0, borderColor: '#fff' }]
                 ]}>
-                    <Text style={[styles.messageText, isBot ? { color: colors.textPrimary } : { color: isHighContrast ? '#000' : '#fff' }]}>
+                    <Text style={[styles.messageText, isBot ? { color: colors.textPrimary } : { color: isHighContrast ? '#000' : '#fff' }, scaledTypography.body]}>
                         {item.text}
                     </Text>
                     <Text style={[styles.timestampText, { color: isBot ? colors.textSecondary : (isHighContrast ? '#000' : '#fff'), opacity: 0.8 }]}>
@@ -145,7 +145,7 @@ export default function ChatbotScreen() {
                     {/* @ts-ignore */}
                     <Bot size={24} color={colors.primary} strokeWidth={2.5} />
                     <View>
-                        <Text style={[styles.title, { color: colors.textPrimary }]}>{t('progeniture')}</Text>
+                        <Text style={[styles.title, { color: colors.textPrimary }, scaledTypography.h2]}>{t('progeniture')}</Text>
                         <View style={styles.statusRow}>
                             <View style={styles.statusDot} />
                             <Text style={styles.statusText}>{t('online_status')}</Text>

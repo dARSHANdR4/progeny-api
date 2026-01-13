@@ -24,7 +24,7 @@ import SubscriptionModal from '../../components/SubscriptionModal';
 import { COLORS, SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
 
 export default function DetectionScreen() {
-    const { colors, isDark, isHighContrast } = useTheme();
+    const { colors, isDark, isHighContrast, scaledTypography, getScaledFontSize } = useTheme();
     const { t } = useLanguage();
     const {
         profile,
@@ -174,10 +174,10 @@ export default function DetectionScreen() {
                 <View style={styles.welcomeSection}>
                     <View style={styles.welcomeRow}>
                         <View>
-                            <Text style={[styles.welcomeText, { color: colors.textPrimary }]}>
+                            <Text style={[styles.welcomeText, { color: colors.textPrimary }, scaledTypography.h2]}>
                                 {t('welcome')}, {profile?.full_name?.split(' ')[0] || 'Demo'}!
                             </Text>
-                            <Text style={[styles.welcomeSubtext, { color: colors.textSecondary }]}>
+                            <Text style={[styles.welcomeSubtext, { color: colors.textSecondary }, scaledTypography.body]}>
                                 {isAdmin
                                     ? t('admin_unlimited')
                                     : isPremium
@@ -206,11 +206,11 @@ export default function DetectionScreen() {
                         <View style={styles.usageHeader}>
                             {/* @ts-ignore */}
                             <Leaf size={20} color={colors.primary} />
-                            <Text style={[styles.usageTitle, { color: colors.textPrimary }]}>{t('daily_usage')}</Text>
+                            <Text style={[styles.usageTitle, { color: colors.textPrimary }, scaledTypography.h3]}>{t('daily_usage')}</Text>
                         </View>
                         <View style={styles.usageInfo}>
-                            <Text style={[styles.usageLabel, { color: colors.textSecondary }]}>{t('scans_used')}</Text>
-                            <Text style={[styles.usageValue, { color: colors.textPrimary }]}>{usageCount} of {dailyLimit}</Text>
+                            <Text style={[styles.usageLabel, { color: colors.textSecondary }, scaledTypography.body]}>{t('scans_used')}</Text>
+                            <Text style={[styles.usageValue, { color: colors.textPrimary }, scaledTypography.body]}>{usageCount} of {dailyLimit}</Text>
                         </View>
                         <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                             <View style={[styles.progressFill, { width: `${usagePercentage}%`, backgroundColor: colors.primary }]} />
@@ -250,7 +250,7 @@ export default function DetectionScreen() {
                         <View style={styles.uploadHeader}>
                             {/* @ts-ignore */}
                             <Upload size={20} color={colors.primary} />
-                            <Text style={[styles.uploadTitle, { color: colors.textPrimary }]}>
+                            <Text style={[styles.uploadTitle, { color: colors.textPrimary }, scaledTypography.h3]}>
                                 {t('upload_leaf')} ({selectedCrop.charAt(0).toUpperCase() + selectedCrop.slice(1)})
                             </Text>
                         </View>

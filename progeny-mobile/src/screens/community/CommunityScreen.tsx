@@ -8,7 +8,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { communityApi } from '../../services/api';
 
 export default function CommunityScreen() {
-    const { colors, isHighContrast } = useTheme();
+    const { colors, isHighContrast, scaledTypography } = useTheme();
     const { t } = useLanguage();
     const insets = useSafeAreaInsets();
 
@@ -135,16 +135,16 @@ export default function CommunityScreen() {
         <View style={[styles.topSection, { backgroundColor: colors.surface, borderBottomWidth: isHighContrast ? 2 : 0, borderBottomColor: colors.border }]}>
             <View style={styles.statsContainer}>
                 <View style={styles.statBox}>
-                    <Text style={[styles.statNumber, { color: colors.primary }]}>1.2k</Text>
-                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('active_farmers')}</Text>
+                    <Text style={[styles.statNumber, { color: colors.primary }, scaledTypography.h3]}>1.2k</Text>
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }, scaledTypography.caption]}>{t('active_farmers')}</Text>
                 </View>
                 <View style={styles.statBox}>
-                    <Text style={[styles.statNumber, { color: colors.primary }]}>450</Text>
-                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('experts')}</Text>
+                    <Text style={[styles.statNumber, { color: colors.primary }, scaledTypography.h3]}>450</Text>
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }, scaledTypography.caption]}>{t('experts')}</Text>
                 </View>
                 <View style={styles.statBox}>
-                    <Text style={[styles.statNumber, { color: colors.primary }]}>8.5k</Text>
-                    <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('success_stories')}</Text>
+                    <Text style={[styles.statNumber, { color: colors.primary }, scaledTypography.h3]}>8.5k</Text>
+                    <Text style={[styles.statLabel, { color: colors.textSecondary }, scaledTypography.caption]}>{t('success_stories')}</Text>
                 </View>
             </View>
 
@@ -172,7 +172,7 @@ export default function CommunityScreen() {
                         </Text>
                     </View>
                     <View>
-                        <Text style={[styles.userName, { color: colors.textPrimary }]}>{userName}</Text>
+                        <Text style={[styles.userName, { color: colors.textPrimary }, scaledTypography.label]}>{userName}</Text>
                         <Text style={[styles.userLocation, { color: colors.textSecondary }]}>{item.location} • {dateStr}</Text>
                     </View>
                 </View>

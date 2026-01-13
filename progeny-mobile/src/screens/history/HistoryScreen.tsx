@@ -8,7 +8,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { historyApi } from '../../services/api';
 
 export default function HistoryScreen() {
-    const { colors, isHighContrast } = useTheme();
+    const { colors, isHighContrast, scaledTypography } = useTheme();
     const { t } = useLanguage();
     const [history, setHistory] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -68,7 +68,7 @@ export default function HistoryScreen() {
 
             <View style={styles.itemContent}>
                 <View style={styles.infoContainer}>
-                    <Text style={[styles.diseaseName, { color: colors.textPrimary }]}>{item.disease_name}</Text>
+                    <Text style={[styles.diseaseName, { color: colors.textPrimary }, scaledTypography.h3]}>{item.disease_name}</Text>
                     <Text style={[styles.confidenceText, { color: colors.textSecondary }]}>
                         {t('confidence')}: <Text style={[styles.confidenceValue, { color: colors.success }]}>
                             {(item.confidence_score * 100).toFixed(1)}%
@@ -86,7 +86,7 @@ export default function HistoryScreen() {
             <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, borderBottomWidth: isHighContrast ? 3 : 1 }]}>
                 {/* @ts-ignore */}
                 <HistoryIcon size={24} color={colors.primary} />
-                <Text style={[styles.title, { color: colors.textPrimary }]}>{t('scan_history')}</Text>
+                <Text style={[styles.title, { color: colors.textPrimary }, scaledTypography.h2]}>{t('scan_history')}</Text>
             </View>
 
             {isLoading && !isRefreshing ? (
@@ -110,7 +110,7 @@ export default function HistoryScreen() {
                 <View style={styles.emptyState}>
                     {/* @ts-ignore */}
                     <HistoryIcon size={64} color={colors.textSecondary} />
-                    <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>{t('no_scans_yet')}</Text>
+                    <Text style={[styles.emptyTitle, { color: colors.textSecondary }, scaledTypography.h3]}>{t('no_scans_yet')}</Text>
                     <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                         {t('no_scans_desc')}
                     </Text>
