@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator, Linking, Share } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator, Linking, Share, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Accessibility, Globe, Eye, Crown, ExternalLink, LogOut, Trash2, Github, Link2, Type, Download } from 'lucide-react-native';
+import { Accessibility, Globe, Eye, Crown, ExternalLink, LogOut, Trash2, Github, Link2, Type, Download, Info, Phone, Mail, X, Users } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import { SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
 import { useAuth } from '../../contexts/AuthContext';
@@ -19,6 +19,14 @@ const LANGUAGES = [
     { code: 'mr', name: 'मराठी (Marathi)' },
 ];
 
+// Team Members
+const TEAM_MEMBERS = [
+    { name: 'Darshan Ramakhyani', email: 'ramrakhyanidarshan@gmail.com', phone: '9024102842', color: '#3B82F6' },
+    { name: 'Chandan Arora', email: 'arorachandan2004@gmail.com', phone: '8619084224', color: '#22C55E' },
+    { name: 'Rachit Tripathi', email: '22cs93@ecajmer.ac.in', phone: '6350019449', color: '#A855F7' },
+    { name: 'Parth Tripathi', email: 'parthdadhich15august@gmail.com', phone: '7339856367', color: '#F97316' },
+];
+
 // External Links
 const GITHUB_URL = 'https://github.com/dARSHANdR4/progeny-api';
 const PROGENY_WEBSITE_URL = 'https://progeny-api.vercel.app';
@@ -31,7 +39,10 @@ export default function AccessibilityScreen() {
     const [showLanguageModal, setShowLanguageModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [showAboutModal, setShowAboutModal] = useState(false);
+    const [showContactModal, setShowContactModal] = useState(false);
     const premiumColor = isHighContrast ? colors.primary : '#8B5CF6';
+
 
     const handleExportData = async () => {
         if (isDemoMode) {
@@ -339,9 +350,36 @@ export default function AccessibilityScreen() {
                         {/* @ts-ignore */}
                         <ExternalLink size={16} color={colors.textSecondary} />
                     </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.settingItem, { borderBottomColor: colors.border }]}
+                        onPress={() => setShowAboutModal(true)}
+                    >
+                        <View style={styles.linkItem}>
+                            {/* @ts-ignore */}
+                            <Info size={18} color={colors.textPrimary} />
+                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>About Us</Text>
+                        </View>
+                        {/* @ts-ignore */}
+                        <ExternalLink size={16} color={colors.textSecondary} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.settingItem, { borderBottomColor: 'transparent' }]}
+                        onPress={() => setShowContactModal(true)}
+                    >
+                        <View style={styles.linkItem}>
+                            {/* @ts-ignore */}
+                            <Users size={18} color={colors.textPrimary} />
+                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Contact Support</Text>
+                        </View>
+                        {/* @ts-ignore */}
+                        <ExternalLink size={16} color={colors.textSecondary} />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Sign Out Section */}
+
                 <TouchableOpacity style={[styles.signOutBtn, { backgroundColor: colors.surface, borderColor: colors.error }]} onPress={handleSignOut}>
                     {/* @ts-ignore */}
                     <LogOut size={20} color={colors.error} />
@@ -374,7 +412,127 @@ export default function AccessibilityScreen() {
             </ScrollView>
 
             <SubscriptionModal visible={showSubscription} onClose={() => setShowSubscription(false)} />
+
+            {/* About Us Modal */}
+            <Modal visible={showAboutModal} animationType="slide" transparent>
+                <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>About Progeny</Text>
+                            <TouchableOpacity onPress={() => setShowAboutModal(false)}>
+                                {/* @ts-ignore */}
+                                <X size={24} color={colors.textPrimary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.modalScrollContent}>
+                            <Text style={[styles.aboutDesc, { color: colors.textSecondary }]}>
+                                Progeny is an AI-powered plant disease detection platform designed specifically for modern farmers.
+                            </Text>
+
+                            <View style={styles.featureList}>
+                                <View style={[styles.featureItem, { backgroundColor: colors.background }]}>
+                                    <Text style={styles.featureIcon}>⚡</Text>
+                                    <View style={styles.featureText}>
+                                        <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Instant Disease Detection</Text>
+                                        <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>Get accurate diagnosis in seconds using AI</Text>
+                                    </View>
+                                </View>
+
+                                <View style={[styles.featureItem, { backgroundColor: colors.background }]}>
+                                    <Text style={styles.featureIcon}>📱</Text>
+                                    <View style={styles.featureText}>
+                                        <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>User-Friendly Interface</Text>
+                                        <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>Simple design that works on any device</Text>
+                                    </View>
+                                </View>
+
+                                <View style={[styles.featureItem, { backgroundColor: colors.background }]}>
+                                    <Text style={styles.featureIcon}>🌱</Text>
+                                    <View style={styles.featureText}>
+                                        <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>Treatment Recommendations</Text>
+                                        <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>Actionable treatment and prevention tips</Text>
+                                    </View>
+                                </View>
+                            </View>
+
+                            <Text style={[styles.howItWorks, { color: colors.textPrimary }]}>How It Works</Text>
+                            <View style={styles.stepsContainer}>
+                                <View style={styles.stepItem}>
+                                    <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
+                                        <Text style={[styles.stepNumberText, { color: isHighContrast ? '#000' : '#fff' }]}>1</Text>
+                                    </View>
+                                    <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Capture Image</Text>
+                                </View>
+                                <View style={styles.stepItem}>
+                                    <View style={[styles.stepNumber, { backgroundColor: '#22C55E' }]}>
+                                        <Text style={styles.stepNumberText}>2</Text>
+                                    </View>
+                                    <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>AI Analysis</Text>
+                                </View>
+                                <View style={styles.stepItem}>
+                                    <View style={[styles.stepNumber, { backgroundColor: '#F97316' }]}>
+                                        <Text style={styles.stepNumberText}>3</Text>
+                                    </View>
+                                    <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Get Results</Text>
+                                </View>
+                            </View>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Contact Support Modal */}
+            <Modal visible={showContactModal} animationType="slide" transparent>
+                <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Contact Support</Text>
+                            <TouchableOpacity onPress={() => setShowContactModal(false)}>
+                                {/* @ts-ignore */}
+                                <X size={24} color={colors.textPrimary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={[styles.contactDesc, { color: colors.textSecondary }]}>
+                            For urgent issues or account-related inquiries, please contact our team directly.
+                        </Text>
+
+                        <ScrollView style={styles.modalScrollContent}>
+                            {TEAM_MEMBERS.map((member, index) => (
+                                <View key={index} style={[styles.teamCard, { backgroundColor: colors.background, borderColor: member.color }]}>
+                                    <View style={[styles.teamAvatar, { backgroundColor: member.color }]}>
+                                        <Text style={styles.teamInitial}>{member.name.charAt(0)}</Text>
+                                    </View>
+                                    <Text style={[styles.teamName, { color: colors.textPrimary }]}>{member.name}</Text>
+
+                                    <View style={styles.contactActions}>
+                                        <TouchableOpacity
+                                            style={[styles.contactBtn, { backgroundColor: colors.primary }]}
+                                            onPress={() => Linking.openURL(`mailto:${member.email}`)}
+                                        >
+                                            {/* @ts-ignore */}
+                                            <Mail size={16} color={isHighContrast ? '#000' : '#fff'} />
+                                            <Text style={[styles.contactBtnText, { color: isHighContrast ? '#000' : '#fff' }]}>Email</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={[styles.contactBtn, { backgroundColor: '#22C55E' }]}
+                                            onPress={() => Linking.openURL(`tel:${member.phone}`)}
+                                        >
+                                            {/* @ts-ignore */}
+                                            <Phone size={16} color="#fff" />
+                                            <Text style={styles.contactBtnText}>Call</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            ))}
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
+
     );
 }
 
@@ -461,5 +619,33 @@ const styles = StyleSheet.create({
     versionTxt: { ...TYPOGRAPHY.caption },
     copyrightTxt: { ...TYPOGRAPHY.caption },
     demoTxt: { ...TYPOGRAPHY.caption, color: '#F59E0B', marginTop: SPACING.sm, fontWeight: 'bold' },
+    // Modal Styles
+    modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
+    modalContent: { width: '100%', maxHeight: '80%', borderRadius: 20, padding: SPACING.lg, ...SHADOWS.large },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md },
+    modalScrollContent: { flexGrow: 1 },
+    // About Modal Styles
+    aboutDesc: { ...TYPOGRAPHY.body, textAlign: 'center', marginBottom: SPACING.lg },
+    featureList: { gap: SPACING.md, marginBottom: SPACING.lg },
+    featureItem: { flexDirection: 'row', alignItems: 'flex-start', padding: SPACING.md, borderRadius: 12, gap: SPACING.md },
+    featureIcon: { fontSize: 24 },
+    featureText: { flex: 1 },
+    featureTitle: { ...TYPOGRAPHY.h4, fontWeight: 'bold', marginBottom: 4 },
+    featureDesc: { ...TYPOGRAPHY.caption },
+    howItWorks: { ...TYPOGRAPHY.h3, textAlign: 'center', marginBottom: SPACING.md },
+    stepsContainer: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: SPACING.lg },
+    stepItem: { alignItems: 'center', flex: 1 },
+    stepNumber: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.sm },
+    stepNumberText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+    stepTitle: { ...TYPOGRAPHY.caption, fontWeight: '600', textAlign: 'center' },
+    // Contact Modal Styles
+    contactDesc: { ...TYPOGRAPHY.body, textAlign: 'center', marginBottom: SPACING.lg },
+    teamCard: { alignItems: 'center', padding: SPACING.lg, borderRadius: 16, marginBottom: SPACING.md, borderWidth: 2, borderLeftWidth: 4 },
+    teamAvatar: { width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', marginBottom: SPACING.sm },
+    teamInitial: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
+    teamName: { ...TYPOGRAPHY.h4, fontWeight: 'bold', marginBottom: SPACING.sm },
+    contactActions: { flexDirection: 'row', gap: SPACING.md },
+    contactBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, borderRadius: 8, gap: SPACING.xs },
+    contactBtnText: { color: '#fff', fontWeight: '600', fontSize: 12 },
 });
 
