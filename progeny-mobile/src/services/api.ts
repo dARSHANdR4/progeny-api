@@ -213,6 +213,18 @@ export const paymentApi = {
     },
 };
 
+// Account API
+export const accountApi = {
+    deleteAccount: async () => {
+        if (IS_DEMO_MODE) {
+            return Promise.reject(new Error('Cannot delete account in demo mode'));
+        }
+        return fetchWithAuth('/api/account/delete', {
+            method: 'DELETE',
+        });
+    },
+};
+
 // History API
 export const historyApi = {
     getScanHistory: async (page = 1, limit = 20) => {

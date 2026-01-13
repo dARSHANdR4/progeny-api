@@ -93,11 +93,20 @@ export default function SubscriptionModal({ visible, onClose }: SubscriptionModa
                 );
             }
         } catch (error: any) {
-            console.error('[Payment] Verification error:', error);
-            // Don't show error - may fail if payment not yet completed
+            console.log('[Payment] Verification check:', error.message);
+            // If error contains "already" or subscription was activated via web, just refresh silently
+            if (error.message?.includes('already') || error.message?.includes('duplicate')) {
+                console.log('[Payment] Subscription already activated via web, refreshing...');
+                refreshUserData();
+            } else {
+                // For other errors, silently refresh - subscription may have been activated elsewhere
+                console.log('[Payment] Refreshing user data after verification attempt...');
+                refreshUserData();
+            }
         } finally {
             setIsLoading(false);
         }
+
     };
 
     const handleUpgrade = async () => {

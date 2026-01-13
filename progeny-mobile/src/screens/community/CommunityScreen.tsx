@@ -333,10 +333,10 @@ export default function CommunityScreen() {
                                 disabled={isPostingComment || !commentText.trim()}
                             >
                                 {isPostingComment ? (
-                                    <ActivityIndicator size="small" color="#fff" />
+                                    <ActivityIndicator size="small" color={isHighContrast ? "#000" : "#fff"} />
                                 ) : (
                                     /* @ts-ignore */
-                                    <Send size={18} color="#fff" />
+                                    <Send size={18} color={isHighContrast ? "#000" : "#fff"} />
                                 )}
                             </TouchableOpacity>
                         </View>

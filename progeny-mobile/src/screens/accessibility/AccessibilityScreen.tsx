@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Accessibility, Globe, Volume2, Eye, Crown, ExternalLink, LogOut } from 'lucide-react-native';
+import { Accessibility, Globe, Volume2, Eye, Crown, ExternalLink, LogOut, Trash2 } from 'lucide-react-native';
 import { SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import SubscriptionModal from '../../components/SubscriptionModal';
+import { accountApi } from '../../services/api';
 
 const LANGUAGES = [
     { code: 'en', name: 'English' },
@@ -25,7 +26,9 @@ export default function AccessibilityScreen() {
     const [pushEnabled, setPushEnabled] = useState(true);
     const [showSubscription, setShowSubscription] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const premiumColor = isHighContrast ? colors.primary : '#8B5CF6';
+
 
     const handleSignOut = () => {
         if (isDemoMode) {
@@ -47,10 +50,64 @@ export default function AccessibilityScreen() {
         );
     };
 
+    const handleDeleteAccount = () => {
+        if (isDemoMode) {
+            Alert.alert(
+                'Demo Mode',
+                'Account deletion is disabled in demo mode.',
+                [{ text: 'OK' }]
+            );
+            return;
+        }
+
+        // First confirmation
+        Alert.alert(
+            '⚠️ Delete Account',
+            'This will permanently delete your account and ALL your data including:\n\n• Scan history\n• Posts & comments\n• Subscription (no refunds)\n• All personal information\n\nThis action CANNOT be undone!',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete My Account',
+                    style: 'destructive',
+                    onPress: () => {
+                        // Second confirmation
+                        Alert.alert(
+                            '🚨 Final Confirmation',
+                            'Are you ABSOLUTELY SURE you want to delete your account? Your data will be gone forever.',
+                            [
+                                { text: 'No, Keep My Account', style: 'cancel' },
+                                {
+                                    text: 'Yes, Delete Forever',
+                                    style: 'destructive',
+                                    onPress: async () => {
+                                        setIsDeleting(true);
+                                        try {
+                                            await accountApi.deleteAccount();
+                                            Alert.alert(
+                                                'Account Deleted',
+                                                'Your account and all data have been permanently deleted. Thank you for using Progeny.',
+                                                [{ text: 'OK', onPress: () => signOut() }]
+                                            );
+                                        } catch (error: any) {
+                                            Alert.alert('Error', error.message || 'Failed to delete account. Please try again.');
+                                        } finally {
+                                            setIsDeleting(false);
+                                        }
+                                    }
+                                }
+                            ]
+                        );
+                    }
+                }
+            ]
+        );
+    };
+
     const handleLanguageSelect = (langCode: string) => {
         setLanguage(langCode as any);
         setShowLanguageModal(false);
     };
+
 
     const currentLanguage = LANGUAGES.find(l => l.code === language)?.name || 'English';
 
@@ -227,10 +284,28 @@ export default function AccessibilityScreen() {
                     <Text style={[styles.signOutTxt, { color: colors.error }]}>{t('sign_out')}</Text>
                 </TouchableOpacity>
 
+                {/* Delete Account Section */}
+                <TouchableOpacity
+                    style={[styles.deleteAccountBtn, { backgroundColor: colors.error }]}
+                    onPress={handleDeleteAccount}
+                    disabled={isDeleting}
+                >
+                    {isDeleting ? (
+                        <ActivityIndicator size="small" color={isHighContrast ? "#000" : "#fff"} />
+                    ) : (
+                        <>
+                            {/* @ts-ignore */}
+                            <Trash2 size={20} color={isHighContrast ? "#000" : "#fff"} />
+                            <Text style={[styles.deleteAccountTxt, { color: isHighContrast ? "#000" : "#fff" }]}>Delete Account</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+
                 <View style={styles.aboutContainer}>
                     <Text style={[styles.versionTxt, { color: colors.textSecondary }]}>Progeny Mobile v1.0.0</Text>
                     <Text style={[styles.copyrightTxt, { color: colors.textSecondary }]}>© 2026 Progeny AI Technologies</Text>
                     {isDemoMode && <Text style={styles.demoTxt}>🎮 DEMO MODE</Text>}
+
                 </View>
             </ScrollView>
 
@@ -301,8 +376,19 @@ const styles = StyleSheet.create({
         marginBottom: SPACING.xl,
     },
     signOutTxt: { ...TYPOGRAPHY.h3 },
+    deleteAccountBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: SPACING.lg,
+        borderRadius: 16,
+        gap: SPACING.md,
+        marginBottom: SPACING.md,
+    },
+    deleteAccountTxt: { ...TYPOGRAPHY.h3, fontWeight: 'bold' },
     aboutContainer: { alignItems: 'center', marginBottom: SPACING.xxl },
     versionTxt: { ...TYPOGRAPHY.caption },
     copyrightTxt: { ...TYPOGRAPHY.caption },
     demoTxt: { ...TYPOGRAPHY.caption, color: '#F59E0B', marginTop: SPACING.sm, fontWeight: 'bold' },
 });
+
