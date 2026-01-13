@@ -23,9 +23,11 @@ interface ThemeContextType {
     isDark: boolean;
     isHighContrast: boolean;
     colors: ThemeColors;
+    textScale: number;
     setMode: (mode: ThemeMode) => void;
     toggleTheme: () => void;
     toggleHighContrast: () => void;
+    setTextScale: (scale: number) => void;
 }
 
 const lightColors: ThemeColors = {
@@ -71,6 +73,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = '@progeny_theme_mode';
 const HC_STORAGE_KEY = '@progeny_high_contrast';
+const TEXT_SCALE_KEY = '@progeny_text_scale';
 
 interface ThemeProviderProps {
     children: ReactNode;
@@ -80,14 +83,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const systemColorScheme = useColorScheme();
     const [mode, setModeState] = useState<ThemeMode>('system');
     const [isHighContrast, setIsHighContrast] = useState(false);
+    const [textScale, setTextScaleState] = useState(1.0); // Default: 1.0 (100%)
 
     // Load saved settings on mount
     useEffect(() => {
         const loadSettings = async () => {
             try {
-                const [savedMode, savedHC] = await Promise.all([
+                const [savedMode, savedHC, savedTextScale] = await Promise.all([
                     AsyncStorage.getItem(THEME_STORAGE_KEY),
-                    AsyncStorage.getItem(HC_STORAGE_KEY)
+                    AsyncStorage.getItem(HC_STORAGE_KEY),
+                    AsyncStorage.getItem(TEXT_SCALE_KEY)
                 ]);
 
                 if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
@@ -96,6 +101,13 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
                 if (savedHC !== null) {
                     setIsHighContrast(savedHC === 'true');
+                }
+
+                if (savedTextScale !== null) {
+                    const scale = parseFloat(savedTextScale);
+                    if (!isNaN(scale) && scale >= 0.8 && scale <= 1.4) {
+                        setTextScaleState(scale);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading settings:', error);
@@ -137,6 +149,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
         }
     };
 
+    const setTextScale = async (scale: number) => {
+        // Clamp scale between 0.8 and 1.4
+        const clampedScale = Math.max(0.8, Math.min(1.4, scale));
+        setTextScaleState(clampedScale);
+        try {
+            await AsyncStorage.setItem(TEXT_SCALE_KEY, String(clampedScale));
+        } catch (error) {
+            console.error('Error saving text scale:', error);
+        }
+    };
+
     return (
         <ThemeContext.Provider
             value={{
@@ -144,9 +167,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
                 isDark,
                 isHighContrast,
                 colors,
+                textScale,
                 setMode,
                 toggleTheme,
                 toggleHighContrast,
+                setTextScale,
             }}
         >
             {children}
@@ -161,3 +186,4 @@ export function useTheme() {
     }
     return context;
 }
+

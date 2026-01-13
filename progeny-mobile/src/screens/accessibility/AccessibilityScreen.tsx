@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator, Linking, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Accessibility, Globe, Eye, Crown, ExternalLink, LogOut, Trash2, Github, Link2 } from 'lucide-react-native';
+import { Accessibility, Globe, Eye, Crown, ExternalLink, LogOut, Trash2, Github, Link2, Type, Download } from 'lucide-react-native';
+import Slider from '@react-native-community/slider';
 import { SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -24,12 +25,37 @@ const PROGENY_WEBSITE_URL = 'https://progeny-api.vercel.app';
 
 export default function AccessibilityScreen() {
     const { isPremium, signOut, isDemoMode } = useAuth();
-    const { isDark, toggleTheme, isHighContrast, toggleHighContrast, colors } = useTheme();
+    const { isDark, toggleTheme, isHighContrast, toggleHighContrast, colors, textScale, setTextScale } = useTheme();
     const { language, setLanguage, t } = useLanguage();
     const [showSubscription, setShowSubscription] = useState(false);
     const [showLanguageModal, setShowLanguageModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
     const premiumColor = isHighContrast ? colors.primary : '#8B5CF6';
+
+    const handleExportData = async () => {
+        if (isDemoMode) {
+            Alert.alert('Demo Mode', 'Data export is disabled in demo mode.');
+            return;
+        }
+
+        setIsExporting(true);
+        try {
+            const result = await accountApi.exportData();
+            if (result.success) {
+                const jsonString = JSON.stringify(result.data, null, 2);
+                await Share.share({
+                    message: jsonString,
+                    title: 'Progeny Data Export',
+                });
+            }
+        } catch (error: any) {
+            Alert.alert('Error', error.message || 'Failed to export data.');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
 
 
     const handleSignOut = () => {
@@ -229,7 +255,56 @@ export default function AccessibilityScreen() {
                             thumbColor={isDark ? colors.primary : colors.textSecondary}
                         />
                     </View>
+
+                    {/* Text Size Control */}
+                    <View style={[styles.settingItem, { borderBottomColor: colors.border, flexDirection: 'column', alignItems: 'stretch' }]}>
+                        <View style={styles.textSizeHeader}>
+                            {/* @ts-ignore */}
+                            <Type size={18} color={colors.textPrimary} />
+                            <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Text Size</Text>
+                            <Text style={[styles.textSizeValue, { color: colors.primary }]}>{Math.round(textScale * 100)}%</Text>
+                        </View>
+                        <View style={styles.sliderContainer}>
+                            <Text style={[styles.sliderLabel, { color: colors.textSecondary }]}>A-</Text>
+                            <Slider
+                                style={styles.slider}
+                                minimumValue={0.8}
+                                maximumValue={1.4}
+                                step={0.1}
+                                value={textScale}
+                                onValueChange={setTextScale}
+                                minimumTrackTintColor={colors.primary}
+                                maximumTrackTintColor={colors.border}
+                                thumbTintColor={colors.primary}
+                            />
+                            <Text style={[styles.sliderLabel, { color: colors.textSecondary, fontSize: 18 }]}>A+</Text>
+                        </View>
+                    </View>
                 </View>
+
+                {/* Data Section */}
+                <View style={[styles.section, dynamicStyles.section]}>
+                    <View style={styles.sectionHeader}>
+                        {/* @ts-ignore */}
+                        <Download size={20} color={colors.primary} />
+                        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>Your Data</Text>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[styles.settingItem, { borderBottomColor: colors.border }]}
+                        onPress={handleExportData}
+                        disabled={isExporting}
+                    >
+                        <Text style={[styles.settingLabel, dynamicStyles.settingLabel]}>Export My Data</Text>
+                        {isExporting ? (
+                            <ActivityIndicator size="small" color={colors.primary} />
+                        ) : (
+                            /* @ts-ignore */
+                            <ExternalLink size={16} color={colors.textSecondary} />
+                        )}
+                    </TouchableOpacity>
+                </View>
+
 
                 {/* Links Section */}
                 <View style={[styles.section, dynamicStyles.section]}>
@@ -345,6 +420,11 @@ const styles = StyleSheet.create({
     settingValue: { ...TYPOGRAPHY.body, opacity: 0.7 },
     settingValueContainer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     linkItem: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+    textSizeHeader: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.sm },
+    textSizeValue: { ...TYPOGRAPHY.body, fontWeight: 'bold', marginLeft: 'auto' },
+    sliderContainer: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+    sliderLabel: { ...TYPOGRAPHY.body, fontSize: 14, fontWeight: 'bold' },
+    slider: { flex: 1, height: 40 },
 
     languageModal: {
         borderRadius: 16,

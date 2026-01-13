@@ -223,7 +223,24 @@ export const accountApi = {
             method: 'DELETE',
         });
     },
+    exportData: async () => {
+        if (IS_DEMO_MODE) {
+            return Promise.resolve({
+                success: true,
+                data: {
+                    user: { email: 'demo@example.com' },
+                    scans: [],
+                    posts: [],
+                    summary: { totalScans: 0, totalPosts: 0 }
+                }
+            });
+        }
+        return fetchWithAuth('/api/account/export', {
+            method: 'GET',
+        });
+    },
 };
+
 
 // History API
 export const historyApi = {
