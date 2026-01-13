@@ -36,10 +36,28 @@ export async function DELETE(request: NextRequest) {
         }
 
         const userId = user.id;
+        console.log("[Account] Checking if user is admin:", userId);
+
+        // Check if user is an admin - admins cannot delete their accounts
+        const { data: profile } = await adminSupabase
+            .from("profiles")
+            .select("is_admin")
+            .eq("id", userId)
+            .single();
+
+        if (profile?.is_admin) {
+            console.log("[Account] Blocked: Admin account cannot be deleted");
+            return NextResponse.json({
+                error: "Admin accounts cannot be deleted through the app. Please contact support for assistance."
+            }, { status: 403 });
+        }
+
+        console.log("[Account] User is not admin, proceeding with deletion...");
         console.log("[Account] Deleting all data for user:", userId);
 
         // Delete user data in order (respecting foreign key constraints)
         const deleteTasks = [
+
             // 1. Delete post comments
             adminSupabase.from("post_comments").delete().eq("user_id", userId),
             // 2. Delete post likes
