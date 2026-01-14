@@ -292,8 +292,42 @@ export const communityApi = {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
+        if (!posts || posts.length === 0) return { posts: [] };
 
-        if (user && posts) {
+        // Fetch all profiles and subscriptions for these users in bulk to be efficient
+        const userIds = [...new Set(posts.map(p => p.user_id))];
+
+        const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, is_admin')
+            .in('id', userIds);
+
+        const { data: subs } = await supabase
+            .from('subscriptions')
+            .select('user_id, status')
+            .in('user_id', userIds)
+            .eq('status', 'active')
+            .gte('expires_at', new Date().toISOString());
+
+        const isAdminMap = new Map(profiles?.map(p => [p.id, p.is_admin]) || []);
+        const isPremiumMap = new Map(subs?.map(s => [s.user_id, true]) || []);
+
+        // Bulk fetch all likes and comments for THESE posts to get accurate counts (Fixes desync from deleted accounts)
+        const postIds = posts.map(p => p.id);
+        const { data: allLikes } = await supabase.from('post_likes').select('post_id').in('post_id', postIds);
+        const { data: allComments } = await supabase.from('post_comments').select('post_id').in('post_id', postIds);
+
+        const realLikesMap = new Map();
+        const realCommentsMap = new Map();
+
+        allLikes?.forEach(l => {
+            realLikesMap.set(l.post_id, (realLikesMap.get(l.post_id) || 0) + 1);
+        });
+        allComments?.forEach(c => {
+            realCommentsMap.set(c.post_id, (realCommentsMap.get(c.post_id) || 0) + 1);
+        });
+
+        if (user) {
             // Fetch all likes for this user to mark "user_liked"
             const { data: myLikes } = await supabase
                 .from('post_likes')
@@ -302,15 +336,27 @@ export const communityApi = {
 
             const likedPostIds = new Set(myLikes?.map(l => l.post_id) || []);
 
-            const postsWithLiked = posts.map(post => ({
+            const postsWithRoles = posts.map(post => ({
                 ...post,
-                user_liked: likedPostIds.has(post.id)
+                is_admin: isAdminMap.get(post.user_id) || false,
+                is_premium: isPremiumMap.has(post.user_id),
+                user_liked: likedPostIds.has(post.id),
+                likes_count: realLikesMap.get(post.id) || 0,
+                comments_count: realCommentsMap.get(post.id) || 0
             }));
 
-            return { posts: postsWithLiked };
+            return { posts: postsWithRoles };
         }
 
-        return { posts: posts || [] };
+        const postsWithRoles = posts.map(post => ({
+            ...post,
+            is_admin: isAdminMap.get(post.user_id) || false,
+            is_premium: isPremiumMap.has(post.user_id),
+            likes_count: realLikesMap.get(post.id) || 0,
+            comments_count: realCommentsMap.get(post.id) || 0
+        }));
+
+        return { posts: postsWithRoles };
     },
     createPost: async (content: string, imageUrl?: string) => {
         if (IS_DEMO_MODE) return { success: true };
@@ -374,14 +420,40 @@ export const communityApi = {
         if (IS_DEMO_MODE) return { comments: [] };
         if (!supabase) throw new Error('Supabase not initialized');
 
-        const { data, error } = await supabase
+        const { data: comments, error } = await supabase
             .from('post_comments')
             .select('*')
             .eq('post_id', postId)
             .order('created_at', { ascending: true });
 
         if (error) throw error;
-        return { comments: data || [] };
+        if (!comments || comments.length === 0) return { comments: [] };
+
+        // Fetch user roles and subscriptions in bulk
+        const userIds = [...new Set(comments.map(c => c.user_id))];
+
+        const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, is_admin')
+            .in('id', userIds);
+
+        const { data: subs } = await supabase
+            .from('subscriptions')
+            .select('user_id, status')
+            .in('user_id', userIds)
+            .eq('status', 'active')
+            .gte('expires_at', new Date().toISOString());
+
+        const isAdminMap = new Map(profiles?.map(p => [p.id, p.is_admin]) || []);
+        const isPremiumMap = new Map(subs?.map(s => [s.user_id, true]) || []);
+
+        const commentsWithRoles = comments.map(c => ({
+            ...c,
+            is_admin: isAdminMap.get(c.user_id) || false,
+            is_premium: isPremiumMap.has(c.user_id)
+        }));
+
+        return { comments: commentsWithRoles };
     },
     createComment: async (postId: string, content: string) => {
         if (IS_DEMO_MODE) return { success: true };

@@ -38,23 +38,11 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     const { profile, usage, subscription, isAuthenticated, isAdmin, isPremium, refreshUserData, canScan } = useAuth();
     const appState = useRef(AppState.currentState);
 
-    // Auto-refresh subscription when app returns to foreground (e.g., after browser payment)
+    // Removed aggressive AppState listener to prevent unnecessary app refreshes.
+    // Payment-specific refreshes are handled by SubscriptionModal.tsx.
     useEffect(() => {
-        const handleAppStateChange = (nextAppState: AppStateStatus) => {
-            if (
-                appState.current.match(/inactive|background/) &&
-                nextAppState === 'active' &&
-                isAuthenticated
-            ) {
-                console.log('[SubscriptionContext] App returned to foreground, refreshing subscription...');
-                refreshUserData();
-            }
-            appState.current = nextAppState;
-        };
-
-        const subscription = AppState.addEventListener('change', handleAppStateChange);
-        return () => subscription.remove();
-    }, [isAuthenticated, refreshUserData]);
+        // AppState listener removed per user request to prevent "habit" of refreshing on every switch.
+    }, []);
 
     const userRole = isAdmin ? 'admin' : (isPremium ? 'premium' : 'basic');
     const dailyLimit = usage?.daily_limit || 5;
@@ -62,7 +50,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     const scansRemaining = typeof usage?.total_scans_available === 'number' ? usage.total_scans_available : 0;
 
     const refreshUsage = async () => {
-        await refreshUserData();
+        await refreshUserData(true);
     };
 
     return (

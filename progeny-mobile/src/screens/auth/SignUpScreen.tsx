@@ -12,6 +12,7 @@ import {
     Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -29,7 +30,9 @@ export default function SignUpScreen({ navigation }: Props) {
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const { signUp } = useAuth();
 
@@ -120,28 +123,54 @@ export default function SignUpScreen({ navigation }: Props) {
 
                         <View style={styles.inputGroup}>
                             <Text style={[styles.label, { color: colors.textPrimary }]}>{t('password_label')}</Text>
-                            <TextInput
-                                style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
-                                placeholder={t('create_password_placeholder')}
-                                placeholderTextColor={colors.textSecondary}
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                editable={!isLoading}
-                            />
+                            <View style={styles.passwordContainer}>
+                                <TextInput
+                                    style={[styles.input, styles.passwordInput, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
+                                    placeholder={t('create_password_placeholder')}
+                                    placeholderTextColor={colors.textSecondary}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    secureTextEntry={!showPassword}
+                                    editable={!isLoading}
+                                />
+                                <TouchableOpacity
+                                    style={styles.eyeIcon}
+                                    onPress={() => setShowPassword(!showPassword)}
+                                    disabled={isLoading}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff size={20} color={colors.textSecondary} />
+                                    ) : (
+                                        <Eye size={20} color={colors.textSecondary} />
+                                    )}
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         <View style={styles.inputGroup}>
                             <Text style={[styles.label, { color: colors.textPrimary }]}>{t('confirm_password_label')}</Text>
-                            <TextInput
-                                style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
-                                placeholder={t('confirm_password_placeholder')}
-                                placeholderTextColor={colors.textSecondary}
-                                value={confirmPassword}
-                                onChangeText={setConfirmPassword}
-                                secureTextEntry
-                                editable={!isLoading}
-                            />
+                            <View style={styles.passwordContainer}>
+                                <TextInput
+                                    style={[styles.input, styles.passwordInput, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
+                                    placeholder={t('confirm_password_placeholder')}
+                                    placeholderTextColor={colors.textSecondary}
+                                    value={confirmPassword}
+                                    onChangeText={setConfirmPassword}
+                                    secureTextEntry={!showConfirmPassword}
+                                    editable={!isLoading}
+                                />
+                                <TouchableOpacity
+                                    style={styles.eyeIcon}
+                                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    disabled={isLoading}
+                                >
+                                    {showConfirmPassword ? (
+                                        <EyeOff size={20} color={colors.textSecondary} />
+                                    ) : (
+                                        <Eye size={20} color={colors.textSecondary} />
+                                    )}
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         <TouchableOpacity
@@ -247,6 +276,21 @@ const createStyles = (colors: any, isHighContrast: boolean) => StyleSheet.create
         padding: SPACING.md,
         fontSize: 16,
         color: colors.textPrimary,
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    passwordInput: {
+        flex: 1,
+        paddingRight: 50, // Space for the eye icon
+    },
+    eyeIcon: {
+        position: 'absolute',
+        right: SPACING.md,
+        height: '100%',
+        justifyContent: 'center',
+        paddingHorizontal: SPACING.xs,
     },
     button: {
         backgroundColor: colors.primary,

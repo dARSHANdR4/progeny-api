@@ -140,6 +140,8 @@ export const translations = {
         new_password_placeholder: 'Enter new password',
         send_reset_link: 'Send Reset Link',
         reset_email_sent_desc: 'If an account exists for this email, you will receive a password reset link shortly.',
+        admin_cannot_delete: 'Admin Account Protected',
+        admin_delete_restricted: 'Admin accounts cannot be deleted directly from the app. Please contact the maintenance team at ramrakhyanidarshan@gmail.com for account management.',
         ok: 'OK',
 
         // New Accessibility Features
@@ -380,6 +382,8 @@ export const translations = {
         new_password_placeholder: 'नया पासवर्ड दर्ज करें',
         send_reset_link: 'रीसेट लिंक भेजें',
         reset_email_sent_desc: 'यदि इस ईमेल के लिए कोई खाता मौजूद है, तो आपको शीघ्र ही पासवर्ड रीसेट लिंक प्राप्त होगा।',
+        admin_cannot_delete: 'एडमिन खाता सुरक्षित',
+        admin_delete_restricted: 'एडमिन खातों को सीधे ऐप से नहीं हटाया जा सकता। कृपया खाता प्रबंधन के लिए ramrakhyanidarshan@gmail.com पर संपर्क करें।',
         ok: 'ठीक है',
 
         // New Accessibility Features

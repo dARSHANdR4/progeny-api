@@ -53,6 +53,15 @@ export async function DELETE(request: NextRequest) {
         }
 
         console.log("[Account] User is not admin, proceeding with deletion...");
+
+        // Get affected posts before deletion to update counts later
+        const { data: likedPosts } = await adminSupabase.from("post_likes").select("post_id").eq("user_id", userId);
+        const { data: commentedPosts } = await adminSupabase.from("post_comments").select("post_id").eq("user_id", userId);
+        const affectedPostIds = [...new Set([
+            ...(likedPosts?.map(l => l.post_id) || []),
+            ...(commentedPosts?.map(c => c.post_id) || [])
+        ])];
+
         console.log("[Account] Deleting all data for user:", userId);
 
         // Delete user data in order (respecting foreign key constraints)
@@ -86,6 +95,31 @@ export async function DELETE(request: NextRequest) {
                 console.error(`[Account] Error deleting from ${tableNames[index]}:`, result.reason);
             }
         });
+
+        // 8. Update likes_count and comments_count for affected posts
+        if (affectedPostIds.length > 0) {
+            console.log("[Account] Updating counters for affected posts:", affectedPostIds.length);
+            for (const postId of affectedPostIds) {
+                const { count: likesCount } = await adminSupabase
+                    .from("post_likes")
+                    .select("*", { count: 'exact', head: true })
+                    .eq("post_id", postId);
+
+                const { count: commentsCount } = await adminSupabase
+                    .from("post_comments")
+                    .select("*", { count: 'exact', head: true })
+                    .eq("post_id", postId);
+
+                await adminSupabase
+                    .from("posts")
+                    .update({
+                        likes_count: likesCount || 0,
+                        comments_count: commentsCount || 0
+                    })
+                    .eq("id", postId);
+            }
+            console.log("[Account] Post counters updated successfully");
+        }
 
         // Delete the user from Supabase Auth
         try {

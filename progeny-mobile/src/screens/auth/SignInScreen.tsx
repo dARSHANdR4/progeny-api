@@ -12,6 +12,7 @@ import {
     Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -28,6 +29,7 @@ export default function SignInScreen({ navigation }: Props) {
     const { t } = useLanguage();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const { signIn } = useAuth();
 
@@ -90,15 +92,28 @@ export default function SignInScreen({ navigation }: Props) {
 
                         <View style={styles.inputGroup}>
                             <Text style={[styles.label, { color: colors.textPrimary }]}>{t('password_label')}</Text>
-                            <TextInput
-                                style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
-                                placeholder={t('password_placeholder')}
-                                placeholderTextColor={colors.textSecondary}
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry={true}
-                                editable={!isLoading}
-                            />
+                            <View style={styles.passwordContainer}>
+                                <TextInput
+                                    style={[styles.input, styles.passwordInput, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
+                                    placeholder={t('password_placeholder')}
+                                    placeholderTextColor={colors.textSecondary}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    secureTextEntry={!showPassword}
+                                    editable={!isLoading}
+                                />
+                                <TouchableOpacity
+                                    style={styles.eyeIcon}
+                                    onPress={() => setShowPassword(!showPassword)}
+                                    disabled={isLoading}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff size={20} color={colors.textSecondary} />
+                                    ) : (
+                                        <Eye size={20} color={colors.textSecondary} />
+                                    )}
+                                </TouchableOpacity>
+                            </View>
                             <TouchableOpacity
                                 onPress={() => navigation.navigate('ForgotPassword')}
                                 style={styles.forgotPasswordContainer}
@@ -202,6 +217,21 @@ const createStyles = (colors: any, isHighContrast: boolean) => StyleSheet.create
         padding: SPACING.md,
         fontSize: 16,
         color: colors.textPrimary,
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    passwordInput: {
+        flex: 1,
+        paddingRight: 50, // Space for the eye icon
+    },
+    eyeIcon: {
+        position: 'absolute',
+        right: SPACING.md,
+        height: '100%',
+        justifyContent: 'center',
+        paddingHorizontal: SPACING.xs,
     },
     forgotPasswordContainer: {
         alignSelf: 'flex-end',

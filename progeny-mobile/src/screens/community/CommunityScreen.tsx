@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, RefreshControl, ActivityIndicator, Modal, TextInput, KeyboardAvoidingView, Platform, Share, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Users, MessageCircle, Heart, Share2, PlusCircle, X, Send } from 'lucide-react-native';
-import { SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
+import { useFocusEffect } from '@react-navigation/native';
+import { Users, MessageCircle, Heart, Share2, PlusCircle, X, Send, ShieldCheck, Award } from 'lucide-react-native';
+import { SPACING, TYPOGRAPHY, SHADOWS, COLORS } from '../../styles/theme';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { communityApi } from '../../services/api';
@@ -40,6 +41,13 @@ export default function CommunityScreen() {
             setIsRefreshing(false);
         }
     };
+
+    // Auto-refresh when user navigates to this tab
+    useFocusEffect(
+        useCallback(() => {
+            fetchPosts();
+        }, [])
+    );
 
     useEffect(() => {
         fetchPosts();
@@ -163,6 +171,26 @@ export default function CommunityScreen() {
         const userName = item.user_name || t('unknown_farmer');
         const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Just now';
 
+        const UserBadge = () => {
+            if (item.is_admin) {
+                return (
+                    <View style={[styles.badge, styles.adminBadge, { borderColor: COLORS.info || colors.primary }]}>
+                        <ShieldCheck size={12} color={isHighContrast ? colors.textPrimary : (COLORS.info || colors.primary)} />
+                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.textPrimary : (COLORS.info || colors.primary) }]}>{t('admin') || 'Admin'}</Text>
+                    </View>
+                );
+            }
+            if (item.is_premium) {
+                return (
+                    <View style={[styles.badge, styles.premiumBadge, { borderColor: COLORS.premiumPurple || colors.primary }]}>
+                        <Award size={12} color={isHighContrast ? colors.textPrimary : (COLORS.premiumPurple || colors.primary)} />
+                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.textPrimary : (COLORS.premiumPurple || colors.primary) }]}>{t('premium') || 'Premium'}</Text>
+                    </View>
+                );
+            }
+            return null;
+        };
+
         return (
             <View style={[styles.postCard, { backgroundColor: colors.surface, borderWidth: isHighContrast ? 2 : 0, borderColor: colors.border }]}>
                 <View style={styles.postHeader}>
@@ -172,7 +200,10 @@ export default function CommunityScreen() {
                         </Text>
                     </View>
                     <View>
-                        <Text style={[styles.userName, { color: colors.textPrimary }, scaledTypography.label]}>{userName}</Text>
+                        <View style={styles.nameContainer}>
+                            <Text style={[styles.userName, { color: colors.textPrimary }, scaledTypography.label]}>{userName}</Text>
+                            <UserBadge />
+                        </View>
                         <Text style={[styles.userLocation, { color: colors.textSecondary }]}>{item.location} • {dateStr}</Text>
                     </View>
                 </View>
@@ -309,13 +340,38 @@ export default function CommunityScreen() {
                                 {comments.length === 0 ? (
                                     <Text style={[styles.emptyComments, { color: colors.textSecondary }, scaledTypography.body]}>{t('no_comments')}</Text>
                                 ) : (
-                                    comments.map(c => (
-                                        <View key={c.id} style={styles.commentItem}>
-                                            <Text style={[styles.commentUser, { color: colors.textPrimary }]}>{c.user_name}</Text>
-                                            <Text style={[styles.commentTextContent, { color: colors.textPrimary }]}>{c.content}</Text>
-                                            <Text style={[styles.commentDate, { color: colors.textSecondary }]}>{new Date(c.created_at).toLocaleString()}</Text>
-                                        </View>
-                                    ))
+                                    comments.map(c => {
+                                        const UserBadge = () => {
+                                            if (c.is_admin) {
+                                                return (
+                                                    <View style={[styles.badge, styles.adminBadge, { borderColor: COLORS.info || colors.primary, transform: [{ scale: 0.8 }] }]}>
+                                                        <ShieldCheck size={12} color={isHighContrast ? colors.textPrimary : (COLORS.info || colors.primary)} />
+                                                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.textPrimary : (COLORS.info || colors.primary) }]}>{t('admin') || 'Admin'}</Text>
+                                                    </View>
+                                                );
+                                            }
+                                            if (c.is_premium) {
+                                                return (
+                                                    <View style={[styles.badge, styles.premiumBadge, { borderColor: COLORS.premiumPurple || colors.primary, transform: [{ scale: 0.8 }] }]}>
+                                                        <Award size={12} color={isHighContrast ? colors.textPrimary : (COLORS.premiumPurple || colors.primary)} />
+                                                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.textPrimary : (COLORS.premiumPurple || colors.primary) }]}>{t('premium') || 'Premium'}</Text>
+                                                    </View>
+                                                );
+                                            }
+                                            return null;
+                                        };
+
+                                        return (
+                                            <View key={c.id} style={styles.commentItem}>
+                                                <View style={styles.nameContainer}>
+                                                    <Text style={[styles.commentUser, { color: colors.textPrimary }]}>{c.user_name}</Text>
+                                                    <UserBadge />
+                                                </View>
+                                                <Text style={[styles.commentTextContent, { color: colors.textPrimary }]}>{c.content}</Text>
+                                                <Text style={[styles.commentDate, { color: colors.textSecondary }]}>{new Date(c.created_at).toLocaleString()}</Text>
+                                            </View>
+                                        );
+                                    })
                                 )}
                             </ScrollView>
                         )}
@@ -411,4 +467,29 @@ const styles = StyleSheet.create({
     commentInputContainer: { flexDirection: 'row', paddingVertical: SPACING.md, gap: SPACING.sm, alignItems: 'center' },
     commentInput: { flex: 1, borderRadius: 20, paddingHorizontal: SPACING.md, paddingVertical: 8, maxHeight: 100, fontSize: 14 },
     sendBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+    nameContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: SPACING.xs,
+    },
+    badge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        borderWidth: 1,
+        gap: 2,
+    },
+    adminBadge: {
+        backgroundColor: COLORS.infoLight,
+    },
+    premiumBadge: {
+        backgroundColor: COLORS.premiumLight,
+    },
+    badgeText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+    },
 });

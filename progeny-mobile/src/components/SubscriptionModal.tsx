@@ -89,7 +89,7 @@ export default function SubscriptionModal({ visible, onClose }: SubscriptionModa
                 Alert.alert(
                     'Payment Successful! 🎉',
                     'Your premium subscription has been activated.',
-                    [{ text: 'OK', onPress: () => { refreshUserData(); onClose(); } }]
+                    [{ text: 'OK', onPress: () => { refreshUserData(true); onClose(); } }]
                 );
             }
         } catch (error: any) {
@@ -97,11 +97,11 @@ export default function SubscriptionModal({ visible, onClose }: SubscriptionModa
             // If error contains "already" or subscription was activated via web, just refresh silently
             if (error.message?.includes('already') || error.message?.includes('duplicate')) {
                 console.log('[Payment] Subscription already activated via web, refreshing...');
-                refreshUserData();
+                refreshUserData(true);
             } else {
                 // For other errors, silently refresh - subscription may have been activated elsewhere
                 console.log('[Payment] Refreshing user data after verification attempt...');
-                refreshUserData();
+                refreshUserData(true);
             }
         } finally {
             setIsLoading(false);

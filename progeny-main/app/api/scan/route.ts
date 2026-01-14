@@ -127,10 +127,10 @@ export async function POST(request: NextRequest) {
     try {
       prediction = await callMLService(imageBuffer, cropType)
       console.log("[ML] Prediction successful:", prediction)
-    } catch (mlError) {
+    } catch (mlError: any) {
       console.error("[ML] Prediction failed:", mlError)
       return NextResponse.json(
-        { error: "Failed to analyze image. Please try again." },
+        { error: `ML Service Error: ${mlError.message || "Failed to analyze image"}. Please check if the ML backend is active.` },
         { status: 500 }
       )
     }

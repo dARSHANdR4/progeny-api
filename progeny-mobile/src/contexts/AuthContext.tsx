@@ -34,7 +34,7 @@ interface AuthContextType {
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
     signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
-    refreshUserData: () => Promise<void>;
+    refreshUserData: (isBackground?: boolean) => Promise<void>;
     resetPasswordForEmail: (email: string) => Promise<{ error: Error | null }>;
     updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
     isRecoveringPassword: boolean;
@@ -177,14 +177,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
     }, []);
 
-    const loadUserData = async (forceUser?: User) => {
+    const loadUserData = async (forceUser?: User, isBackground: boolean = false) => {
         const targetUser = forceUser || user;
         if (IS_DEMO_MODE || !supabase || !targetUser) {
             setIsLoading(false);
             return;
         }
 
-        setIsLoading(true);
+        if (!isBackground) {
+            setIsLoading(true);
+        }
         try {
             // 1. Fetch user profile from 'profiles' table (Aligned with Web)
             const { data: profileData, error: profileError } = await supabase
@@ -239,7 +241,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } catch (error) {
             console.error('Error loading user data:', error);
         } finally {
-            setIsLoading(false);
+            if (!isBackground) {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -291,9 +295,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     };
 
-    const refreshUserData = async () => {
+    const refreshUserData = async (isBackground: boolean = false) => {
         if (user) {
-            await loadUserData();
+            await loadUserData(undefined, isBackground);
         }
     };
 

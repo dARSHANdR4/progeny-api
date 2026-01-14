@@ -32,7 +32,7 @@ const GITHUB_URL = 'https://github.com/dARSHANdR4/progeny-api';
 const PROGENY_WEBSITE_URL = 'https://progeny-api.vercel.app';
 
 export default function AccessibilityScreen() {
-    const { isPremium, signOut, isDemoMode } = useAuth();
+    const { isPremium, isAdmin, signOut, isDemoMode } = useAuth();
     const { isDark, toggleTheme, isHighContrast, toggleHighContrast, colors, textScale, setTextScale, scaledTypography } = useTheme();
     const { language, setLanguage, t } = useLanguage();
     const [showSubscription, setShowSubscription] = useState(false);
@@ -94,6 +94,15 @@ export default function AccessibilityScreen() {
             Alert.alert(
                 t('demo_mode'),
                 t('data_export_disabled'), // Reusing for deletion disabled
+                [{ text: t('ok') }]
+            );
+            return;
+        }
+
+        if (isAdmin) {
+            Alert.alert(
+                `🛡️ ${t('admin_cannot_delete')}`,
+                t('admin_delete_restricted'),
                 [{ text: t('ok') }]
             );
             return;
@@ -171,26 +180,28 @@ export default function AccessibilityScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
-                {/* Subscription Section */}
-                <View style={[styles.section, dynamicStyles.section]}>
-                    <View style={styles.premiumBanner}>
-                        {/* @ts-ignore */}
-                        <Crown size={32} color={premiumColor} />
-                        <View style={styles.bannerText}>
-                            <Text style={[styles.bannerTitle, { color: premiumColor }]}>
-                                {isPremium ? t('progeny_premium') : t('unlock_premium')}
-                            </Text>
-                            <Text style={[styles.bannerDesc, { color: colors.textSecondary }]}>
-                                {isPremium ? t('premium_thank_you') : t('unlock_description')}
-                            </Text>
+                {/* Subscription Section - Hidden for Admins */}
+                {!isAdmin && (
+                    <View style={[styles.section, dynamicStyles.section]}>
+                        <View style={styles.premiumBanner}>
+                            {/* @ts-ignore */}
+                            <Crown size={32} color={premiumColor} />
+                            <View style={styles.bannerText}>
+                                <Text style={[styles.bannerTitle, { color: premiumColor }]}>
+                                    {isPremium ? t('progeny_premium') : t('unlock_premium')}
+                                </Text>
+                                <Text style={[styles.bannerDesc, { color: colors.textSecondary }]}>
+                                    {isPremium ? t('premium_thank_you') : t('unlock_description')}
+                                </Text>
+                            </View>
+                            {!isPremium && (
+                                <TouchableOpacity style={[styles.upgradeBtn, { backgroundColor: premiumColor }]} onPress={() => setShowSubscription(true)}>
+                                    <Text style={[styles.upgradeTxt, { color: isHighContrast ? '#000' : '#fff' }]}>{t('upgrade')}</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
-                        {!isPremium && (
-                            <TouchableOpacity style={[styles.upgradeBtn, { backgroundColor: premiumColor }]} onPress={() => setShowSubscription(true)}>
-                                <Text style={[styles.upgradeTxt, { color: isHighContrast ? '#000' : '#fff' }]}>{t('upgrade')}</Text>
-                            </TouchableOpacity>
-                        )}
                     </View>
-                </View>
+                )}
 
                 {/* Language Modal */}
                 {showLanguageModal && (

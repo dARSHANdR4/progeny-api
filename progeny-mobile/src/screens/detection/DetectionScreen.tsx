@@ -120,7 +120,7 @@ export default function DetectionScreen() {
         try {
             const response = await scanApi.scan(imageUri, selectedCrop);
             setScanResult(response.scan);
-            await refreshUserData();
+            await refreshUserData(true);
         } catch (err: any) {
             setError(err.message || t('something_went_wrong'));
             if (err.message?.includes('limit')) {

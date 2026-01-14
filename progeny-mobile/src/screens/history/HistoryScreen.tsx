@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { History as HistoryIcon, Calendar, ArrowRight, AlertCircle } from 'lucide-react-native';
 import { SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -31,6 +32,21 @@ export default function HistoryScreen() {
         }
     };
 
+    // Use useFocusEffect to refresh history whenever user navigates to this tab
+    useFocusEffect(
+        useCallback(() => {
+            // Soft refresh: fetch without forced full-screen loading if we already have data
+            if (history.length > 0) {
+                // Background refresh
+                fetchHistory();
+            } else {
+                // Initial load
+                fetchHistory();
+            }
+        }, [])
+    );
+
+    // Keep initial mount fetch as a backup
     useEffect(() => {
         fetchHistory();
     }, []);

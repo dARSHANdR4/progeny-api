@@ -31,7 +31,7 @@ MODELS = {}
 crop_types = ['apple', 'corn', 'potato', 'tomato']
 
 CLASS_MAPPINGS = {
-    'apple': ['Scab', 'Black Rot', 'Cedar Rust', 'Healthy'],
+    'apple': ['Alternaria', 'Insect', 'MLB', 'Mosaic', 'Multiple', 'Powdery Mildew', 'Scab'],
     'potato': ['Early Blight', 'Late Blight', 'Healthy'],
     'corn': ['Blight', 'Common Rust', 'Healthy'],
     'tomato': ['Bacterial Spot', 'Early Blight', 'Late Blight', 'Leaf Mold', 'Target Spot', 'Healthy']
@@ -45,30 +45,62 @@ for crop in crop_types:
             'classes': CLASS_MAPPINGS[crop]
         }
         print(f'✓ Loaded {crop} model from {model_path}')
+        # Log class count mismatch
+        model = MODELS[crop]['model']
+        expected = len(MODELS[crop]['classes'])
+        actual = model.output_shape[-1]
+        if expected != actual:
+            print(f'⚠️ WARNING: {crop} model expects {actual} classes, but mapping has {expected}!')
     except Exception as e:
         print(f'✗ Error loading {crop} model: {e}')
 
 # Disease remedies
 DISEASE_REMEDIES = {
     'Healthy': ['Continue regular monitoring', 'Maintain proper watering', 'Keep area clean'],
-    'Scab': [
-        'Apply fungicides during wet weather',
-        'Remove fallen leaves and infected fruit',
-        'Prune trees to improve air circulation',
-        'Choose resistant varieties when replanting'
-    ],
-    'Black Rot': [
+    # Apple
+    'Alternaria': [
         'Remove and destroy infected leaves and fruit',
-        'Apply copper-based fungicides',
-        'Improve air circulation around plants',
-        'Avoid overhead watering'
+        'Apply fungicides containing copper or mancozeb',
+        'Improve air circulation by pruning',
+        'Avoid overhead irrigation'
     ],
-    'Cedar Rust': [
-        'Remove nearby cedar trees if possible',
+    'Insect': [
+        'Identify specific pest for targeted treatment',
+        'Use appropriate insecticides or biological controls',
+        'Remove heavily infested plant parts',
+        'Encourage beneficial insects'
+    ],
+    'MLB': [
+        'Remove fallen leaves to reduce spore buildup',
         'Apply fungicides in early spring',
-        'Plant resistant apple varieties',
-        'Rake and destroy fallen leaves'
+        'Prune trees for better air circulation',
+        'Choose resistant apple varieties'
     ],
+    'Mosaic': [
+        'Remove and destroy infected plants immediately',
+        'Control aphid populations',
+        'Use virus-free planting material',
+        'Keep area weed-free'
+    ],
+    'Multiple': [
+        'Consult with agricultural specialist',
+        'Implement integrated disease management',
+        'Improve overall plant health',
+        'Monitor plants closely'
+    ],
+    'Powdery Mildew': [
+        'Apply sulfur or potassium bicarbonate sprays',
+        'Improve air circulation',
+        'Avoid overhead watering',
+        'Remove infected plant parts'
+    ],
+    'Scab': [
+        'Apply fungicides during primary infection period',
+        'Remove fallen leaves and infected fruit',
+        'Prune for better air circulation',
+        'Choose scab-resistant varieties'
+    ],
+    # Corn
     'Blight': [
         'Apply appropriate fungicides',
         'Remove and destroy infected plant material',
@@ -81,6 +113,7 @@ DISEASE_REMEDIES = {
         'Remove volunteer corn plants',
         'Monitor fields regularly'
     ],
+    # Potato/Tomato
     'Early Blight': [
         'Apply chlorothalonil or copper-based fungicides',
         'Remove lower leaves that touch the ground',
@@ -91,7 +124,7 @@ DISEASE_REMEDIES = {
         'Apply fungicides immediately upon detection',
         'Remove and destroy infected plants',
         'Avoid overhead irrigation',
-        'Monitor weather conditions favorable to disease'
+        'Monitor weather conditions'
     ],
     'Bacterial Spot': [
         'Apply copper-based bactericides',
@@ -103,7 +136,7 @@ DISEASE_REMEDIES = {
         'Improve ventilation in greenhouse or garden',
         'Reduce humidity levels',
         'Remove and destroy infected leaves',
-        'Apply appropriate fungicides if needed'
+        'Apply appropriate fungicides'
     ],
     'Target Spot': [
         'Apply fungicides containing chlorothalonil',

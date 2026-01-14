@@ -11,9 +11,20 @@
             "distribution": "internal",
             "android": {
                 "buildType": "apk"
+            },
+            "env": {
+                "EXPO_PUBLIC_SUPABASE_URL": "https://cywbxowtbvcvxldljgjn.supabase.co",
+                "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d2J4b3d0YnZjdnhsZGxqZ2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyODY2MTAsImV4cCI6MjA3Mzg2MjYxMH0.UkXVM-30QuB8fv_YR9BIxwY3fazq5RgznLSMqHBxoAI",
+                "EXPO_PUBLIC_API_URL": "https://progeny-api.vercel.app"
             }
         },
-        "production": {}
+        "production": {
+            "env": {
+                "EXPO_PUBLIC_SUPABASE_URL": "https://cywbxowtbvcvxldljgjn.supabase.co",
+                "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5d2J4b3d0YnZjdnhsZGxqZ2puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyODY2MTAsImV4cCI6MjA3Mzg2MjYxMH0.UkXVM-30QuB8fv_YR9BIxwY3fazq5RgznLSMqHBxoAI",
+                "EXPO_PUBLIC_API_URL": "https://progeny-api.vercel.app"
+            }
+        }
     },
     "submit": {
         "production": {}
