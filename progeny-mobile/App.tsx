@@ -37,7 +37,6 @@ function AppContent() {
         SignUp: 'signup',
         ForgotPassword: 'forgot-password',
         ResetPassword: 'reset-password',
-        ConfirmSignUp: 'signup-confirmed',
       },
     },
   };

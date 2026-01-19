@@ -115,33 +115,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         const handleUrl = async (url: string) => {
             console.log('🔗 Handling URL:', url);
-            Alert.alert('Debug: Deep Link Received', url);
+            // Alert.alert('Debug: Deep Link Received', url); // Removed to avoid potential UI block
 
-            // Supabase puts tokens in the fragment (#...) instead of query params (?...)
-            // Example: progeny://reset-password#access_token=xxx&refresh_token=yyy&type=recovery
-            const parts = url.split('#');
-            if (parts.length < 2) return;
+            try {
+                // Supabase puts tokens in the fragment (#...) instead of query params (?...)
+                // Example: progeny://reset-password#access_token=xxx&refresh_token=yyy&type=recovery
+                const parts = url.split('#');
+                if (parts.length < 2) return;
 
-            const fragment = parts[1];
-            const params = new URLSearchParams(fragment);
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
-            const type = params.get('type');
-            const errorCode = params.get('error_code');
+                const fragment = parts[1];
+                const params = new URLSearchParams(fragment);
+                const accessToken = params.get('access_token');
+                const refreshToken = params.get('refresh_token');
+                const type = params.get('type');
+                const errorCode = params.get('error_code');
 
-            if (errorCode) {
-                Alert.alert('Link Error', params.get('error_description') || 'Invalid recovery link');
-                return;
-            }
+                if (errorCode) {
+                    console.error('❌ Link Error:', params.get('error_description'));
+                    Alert.alert('Link Error', params.get('error_description') || 'Invalid recovery link');
+                    return;
+                }
 
-            if (type === 'recovery') {
-                console.log('🔄 Recovery type detected, prioritizing ResetPassword screen');
-                setIsRecoveringPassword(true);
-            }
+                if (type === 'recovery') {
+                    console.log('🔄 Recovery type detected, prioritizing ResetPassword screen');
+                    setIsRecoveringPassword(true);
+                }
 
-            if (accessToken && supabase) {
-                console.log('🔑 Found access token in URL, type:', type);
-                try {
+                if (accessToken && supabase) {
+                    console.log('🔑 Found access token in URL, type:', type);
                     const { error } = await supabase.auth.setSession({
                         access_token: accessToken,
                         refresh_token: refreshToken || '',
@@ -156,9 +157,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
                     if (type === 'recovery') {
                         setIsRecoveringPassword(true);
                     }
-                } catch (err) {
-                    console.error('❌ unexpected error setting session:', err);
                 }
+            } catch (err) {
+                console.error('❌ Unexpected error handling deep link:', err);
+            } finally {
+                // Always ensure loading is finished if we were in a loading state
+                setIsLoading(false);
             }
         };
 
@@ -276,7 +280,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 email,
                 password,
                 options: {
-                    emailRedirectTo: 'progeny://signup-confirmed',
+                    emailRedirectTo: 'https://progeny-api.vercel.app/auth/confirm',
                     data: {
                         full_name: fullName,
                     },
