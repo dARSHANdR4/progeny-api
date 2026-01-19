@@ -25,12 +25,13 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
+    "owner": "daytona69",
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "bfc2ae99-13ba-49cd-8468-d30f66388363"
+        "projectId": "97aaa623-9d3a-4764-a7c4-1a63400c0be1"
       }
     }
   }

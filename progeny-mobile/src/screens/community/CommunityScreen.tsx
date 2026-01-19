@@ -174,17 +174,17 @@ export default function CommunityScreen() {
         const UserBadge = () => {
             if (item.is_admin) {
                 return (
-                    <View style={[styles.badge, styles.adminBadge, { borderColor: COLORS.info || colors.primary }]}>
-                        <ShieldCheck size={12} color={isHighContrast ? colors.textPrimary : (COLORS.info || colors.primary)} />
-                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.textPrimary : (COLORS.info || colors.primary) }]}>{t('admin') || 'Admin'}</Text>
+                    <View style={[styles.badge, styles.adminBadge, { backgroundColor: isHighContrast ? colors.textPrimary : COLORS.infoLight, borderColor: isHighContrast ? colors.textPrimary : (COLORS.info || colors.primary) }]}>
+                        <ShieldCheck size={12} color={isHighContrast ? colors.background : (COLORS.info || colors.primary)} />
+                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.background : (COLORS.info || colors.primary) }]}>{t('admin') || 'Admin'}</Text>
                     </View>
                 );
             }
             if (item.is_premium) {
                 return (
-                    <View style={[styles.badge, styles.premiumBadge, { borderColor: COLORS.premiumPurple || colors.primary }]}>
-                        <Award size={12} color={isHighContrast ? colors.textPrimary : (COLORS.premiumPurple || colors.primary)} />
-                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.textPrimary : (COLORS.premiumPurple || colors.primary) }]}>{t('premium') || 'Premium'}</Text>
+                    <View style={[styles.badge, styles.premiumBadge, { backgroundColor: isHighContrast ? colors.textPrimary : COLORS.premiumLight, borderColor: isHighContrast ? colors.textPrimary : (COLORS.premiumPurple || colors.primary) }]}>
+                        <Award size={12} color={isHighContrast ? colors.background : (COLORS.premiumPurple || colors.primary)} />
+                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.background : (COLORS.premiumPurple || colors.primary) }]}>{t('premium') || 'Premium'}</Text>
                     </View>
                 );
             }
@@ -344,17 +344,17 @@ export default function CommunityScreen() {
                                         const UserBadge = () => {
                                             if (c.is_admin) {
                                                 return (
-                                                    <View style={[styles.badge, styles.adminBadge, { borderColor: COLORS.info || colors.primary, transform: [{ scale: 0.8 }] }]}>
-                                                        <ShieldCheck size={12} color={isHighContrast ? colors.textPrimary : (COLORS.info || colors.primary)} />
-                                                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.textPrimary : (COLORS.info || colors.primary) }]}>{t('admin') || 'Admin'}</Text>
+                                                    <View style={[styles.badge, styles.adminBadge, { backgroundColor: isHighContrast ? colors.textPrimary : COLORS.infoLight, borderColor: isHighContrast ? colors.textPrimary : (COLORS.info || colors.primary), transform: [{ scale: 0.8 }] }]}>
+                                                        <ShieldCheck size={12} color={isHighContrast ? colors.background : (COLORS.info || colors.primary)} />
+                                                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.background : (COLORS.info || colors.primary) }]}>{t('admin') || 'Admin'}</Text>
                                                     </View>
                                                 );
                                             }
                                             if (c.is_premium) {
                                                 return (
-                                                    <View style={[styles.badge, styles.premiumBadge, { borderColor: COLORS.premiumPurple || colors.primary, transform: [{ scale: 0.8 }] }]}>
-                                                        <Award size={12} color={isHighContrast ? colors.textPrimary : (COLORS.premiumPurple || colors.primary)} />
-                                                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.textPrimary : (COLORS.premiumPurple || colors.primary) }]}>{t('premium') || 'Premium'}</Text>
+                                                    <View style={[styles.badge, styles.premiumBadge, { backgroundColor: isHighContrast ? colors.textPrimary : COLORS.premiumLight, borderColor: isHighContrast ? colors.textPrimary : (COLORS.premiumPurple || colors.primary), transform: [{ scale: 0.8 }] }]}>
+                                                        <Award size={12} color={isHighContrast ? colors.background : (COLORS.premiumPurple || colors.primary)} />
+                                                        <Text style={[styles.badgeText, { color: isHighContrast ? colors.background : (COLORS.premiumPurple || colors.primary) }]}>{t('premium') || 'Premium'}</Text>
                                                     </View>
                                                 );
                                             }

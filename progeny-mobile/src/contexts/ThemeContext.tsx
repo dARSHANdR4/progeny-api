@@ -47,7 +47,7 @@ interface ThemeContextType {
 
 const lightColors: ThemeColors = {
     primary: COLORS.primary,
-    secondary: COLORS.secondary,
+    secondary: '#FB923C', // Brighter Orange (User requested)
     background: COLORS.background,
     surface: COLORS.surface,
     textPrimary: COLORS.textPrimary,
