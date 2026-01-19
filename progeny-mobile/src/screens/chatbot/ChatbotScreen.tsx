@@ -16,6 +16,8 @@ import { SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { chatApi } from '../../services/api';
+import Voice from '@react-native-voice/voice';
+import { Alert } from 'react-native';
 
 interface Message {
     id: string;
@@ -88,13 +90,35 @@ export default function ChatbotScreen() {
         }
     };
 
-    const toggleRecording = () => {
-        setIsRecording(!isRecording);
-        if (!isRecording) {
-            setTimeout(() => {
-                setIsRecording(false);
-                setInputText("How do I treat potato blight?");
-            }, 3000);
+    React.useEffect(() => {
+        Voice.onSpeechStart = () => setIsRecording(true);
+        Voice.onSpeechEnd = () => setIsRecording(false);
+        Voice.onSpeechError = (e: any) => {
+            console.error('Speech Error:', e);
+            setIsRecording(false);
+        };
+        Voice.onSpeechResults = (e: any) => {
+            if (e.value && e.value.length > 0) {
+                setInputText(e.value[0]);
+            }
+        };
+
+        return () => {
+            Voice.destroy().then(Voice.removeAllListeners);
+        };
+    }, []);
+
+    const toggleRecording = async () => {
+        try {
+            if (isRecording) {
+                await Voice.stop();
+            } else {
+                setInputText('');
+                await Voice.start('en-US');
+            }
+        } catch (e) {
+            console.error('Voice Toggle Error:', e);
+            Alert.alert(t('error'), 'Speech recognition is not available on this device or permission was denied.');
         }
     };
 
@@ -175,10 +199,7 @@ export default function ChatbotScreen() {
 
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={100}>
                 <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border, borderTopWidth: isHighContrast ? 3 : 1 }]}>
-                    <TouchableOpacity style={styles.attachBtn}>
-                        {/* @ts-ignore */}
-                        <Plus size={24} color={colors.textSecondary} />
-                    </TouchableOpacity>
+                    {/* Attachment button removed as it's currently non-functional */}
 
                     <View style={[styles.inputWrapper, { backgroundColor: colors.background }]}>
                         <TextInput

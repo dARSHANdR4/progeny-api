@@ -14,7 +14,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "This app uses the microphone to allow you to speak to the Progeniture AI assistant.",
+        "NSSpeechRecognitionUsageDescription": "This app uses speech recognition to convert your voice to text for the Progeniture AI assistant."
+      }
     },
     "android": {
       "package": "com.progeny.app",
@@ -23,8 +27,20 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "RECORD_AUDIO"
+      ]
     },
+    "plugins": [
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "Allow Progeniture to access your microphone",
+          "speechRecognitionPermission": "Allow Progeniture to use speech recognition"
+        }
+      ]
+    ],
     "owner": "daytona69",
     "web": {
       "favicon": "./assets/favicon.png"

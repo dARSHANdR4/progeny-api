@@ -9,11 +9,12 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') as EmailOtpType | null
     const next = searchParams.get('next') ?? '/auth/confirmed'
 
-    const redirectTo = request.nextUrl.clone()
-    redirectTo.pathname = next
-    redirectTo.searchParams.delete('code')
-    redirectTo.searchParams.delete('token_hash')
-    redirectTo.searchParams.delete('type')
+    // Get the host from headers or fallback to production URL
+    const host = request.headers.get('host') || 'progeny-api.vercel.app'
+    const protocol = host.includes('localhost') ? 'http' : 'https'
+    const baseUrl = `${protocol}://${host}`
+
+    const redirectTo = new URL(next, baseUrl)
 
     if (code) {
         const supabase = await createClient()
