@@ -386,6 +386,34 @@ export const chatApi = {
             body: JSON.stringify({ message }),
         });
     },
+    voiceChat: async (audioUri: string) => {
+        if (!supabase) throw new Error('Supabase not initialized');
+        const { data: { session } } = await supabase.auth.getSession();
+
+        const formData = new FormData();
+        const filename = audioUri.split('/').pop() || 'recording.m4a';
+
+        formData.append('audio', {
+            uri: audioUri,
+            name: filename,
+            type: 'audio/m4a',
+        } as any);
+
+        const response = await fetch(`${API_BASE_URL}/api/chat/voice`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${session?.access_token}`,
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Voice processing failed' }));
+            throw new Error(error.error || `HTTP ${response.status}`);
+        }
+
+        return response.json();
+    },
 };
 
 export default {

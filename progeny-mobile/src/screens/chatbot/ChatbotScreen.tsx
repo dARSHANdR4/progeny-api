@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     Text,
@@ -9,15 +9,16 @@ import {
     KeyboardAvoidingView,
     Platform,
     ActivityIndicator,
+    Alert,
+    Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Send, Mic, User, Bot, Volume2, Plus } from 'lucide-react-native';
+import { Send, User, Bot, Volume2, Mic, X } from 'lucide-react-native';
 import { SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { chatApi } from '../../services/api';
-import Voice from '@react-native-voice/voice';
-import { Alert } from 'react-native';
+import { Audio } from 'expo-av';
 
 interface Message {
     id: string;
@@ -25,8 +26,6 @@ interface Message {
     sender: 'user' | 'bot';
     timestamp: Date;
 }
-
-// Initial messages moved inside component to support localization
 
 export default function ChatbotScreen() {
     const { colors, isHighContrast, scaledTypography } = useTheme();
@@ -45,7 +44,31 @@ export default function ChatbotScreen() {
     const [inputText, setInputText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
+    const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const flatListRef = useRef<FlatList>(null);
+    const pulseAnim = useRef(new Animated.Value(1)).current;
+
+    // Pulse animation handle
+    useEffect(() => {
+        if (isRecording) {
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(pulseAnim, {
+                        toValue: 1.2,
+                        duration: 500,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(pulseAnim, {
+                        toValue: 1,
+                        duration: 500,
+                        useNativeDriver: true,
+                    }),
+                ])
+            ).start();
+        } else {
+            pulseAnim.setValue(1);
+        }
+    }, [isRecording]);
 
     const handleSend = async () => {
         if (!inputText.trim()) return;
@@ -90,35 +113,68 @@ export default function ChatbotScreen() {
         }
     };
 
-    React.useEffect(() => {
-        Voice.onSpeechStart = () => setIsRecording(true);
-        Voice.onSpeechEnd = () => setIsRecording(false);
-        Voice.onSpeechError = (e: any) => {
-            console.error('Speech Error:', e);
-            setIsRecording(false);
-        };
-        Voice.onSpeechResults = (e: any) => {
-            if (e.value && e.value.length > 0) {
-                setInputText(e.value[0]);
-            }
-        };
-
-        return () => {
-            Voice.destroy().then(Voice.removeAllListeners);
-        };
-    }, []);
-
-    const toggleRecording = async () => {
+    const startRecording = async () => {
         try {
-            if (isRecording) {
-                await Voice.stop();
-            } else {
-                setInputText('');
-                await Voice.start('en-US');
+            const { status } = await Audio.requestPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission denied', 'Microphone permission is required for voice chat.');
+                return;
             }
-        } catch (e) {
-            console.error('Voice Toggle Error:', e);
-            Alert.alert(t('error'), 'Speech recognition is not available on this device or permission was denied.');
+
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: true,
+                playsInSilentModeIOS: true,
+            });
+
+            const { recording } = await Audio.Recording.createAsync(
+                Audio.RecordingOptionsPresets.HIGH_QUALITY
+            );
+
+            setRecording(recording);
+            setIsRecording(true);
+        } catch (err) {
+            console.error('Failed to start recording', err);
+            Alert.alert('Error', 'Failed to start recording.');
+        }
+    };
+
+    const stopRecording = async () => {
+        if (!recording) return;
+
+        setIsRecording(false);
+        setIsTyping(true);
+
+        try {
+            await recording.stopAndUnloadAsync();
+            const uri = recording.getURI();
+            setRecording(null);
+
+            if (uri) {
+                const data = await chatApi.voiceChat(uri);
+
+                // Add user's transcribed message
+                const userMsg: Message = {
+                    id: Date.now().toString(),
+                    text: data.user_text,
+                    sender: 'user',
+                    timestamp: new Date(),
+                };
+                setMessages((prev) => [...prev, userMsg]);
+
+                // Add bot's response
+                const botMsg: Message = {
+                    id: (Date.now() + 1).toString(),
+                    text: data.response,
+                    sender: 'bot',
+                    timestamp: new Date(),
+                };
+                setMessages((prev) => [...prev, botMsg]);
+            }
+        } catch (err: any) {
+            console.error('Voice Chat Error:', err);
+            Alert.alert('Voice Error', err.message || 'Failed to process voice command.');
+        } finally {
+            setIsTyping(false);
         }
     };
 
@@ -164,132 +220,272 @@ export default function ChatbotScreen() {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-            <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border, borderBottomWidth: isHighContrast ? 3 : 1 }]}>
-                <View style={styles.headerTitleRow}>
-                    {/* @ts-ignore */}
-                    <Bot size={24} color={colors.primary} strokeWidth={2.5} />
-                    <View>
-                        <Text style={[styles.title, { color: colors.textPrimary }, scaledTypography.h2]}>{t('progeniture')}</Text>
-                        <View style={styles.statusRow}>
-                            <View style={styles.statusDot} />
-                            <Text style={styles.statusText}>{t('online_status')}</Text>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                style={styles.container}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+            >
+                {/* Header */}
+                <View style={[styles.header, { borderBottomColor: colors.border }]}>
+                    <View style={styles.headerInfo}>
+                        <View style={[styles.botAvatarSmall, { backgroundColor: colors.primary }]}>
+                            {/* @ts-ignore */}
+                            <Bot size={16} color={isHighContrast ? '#000' : '#fff'} />
+                        </View>
+                        <View>
+                            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Progeniture</Text>
+                            <View style={styles.onlineIndicatorRow}>
+                                <View style={styles.onlineDot} />
+                                <Text style={styles.onlineText}>Progenitor AI Online</Text>
+                            </View>
                         </View>
                     </View>
+                    <TouchableOpacity onPress={() => setMessages(INITIAL_MESSAGES)}>
+                        <Text style={[styles.clearText, { color: colors.textSecondary }]}>{t('clear')}</Text>
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.clearBtn} onPress={() => setMessages(INITIAL_MESSAGES)}>
-                    <Text style={[styles.clearText, { color: colors.textSecondary }, scaledTypography.caption]}>{t('clear')}</Text>
-                </TouchableOpacity>
-            </View>
 
-            <FlatList
-                ref={flatListRef}
-                data={messages}
-                keyExtractor={(item) => item.id}
-                renderItem={renderMessage}
-                contentContainerStyle={styles.listContent}
-                onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
-            />
+                {/* Messages */}
+                <FlatList
+                    ref={flatListRef}
+                    data={messages}
+                    renderItem={renderMessage}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.messagesList}
+                    onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
+                    onLayout={() => flatListRef.current?.scrollToEnd()}
+                />
 
-            {isTyping && (
-                <View style={styles.typingContainer}>
-                    <ActivityIndicator size="small" color={colors.primary} />
-                    <Text style={[styles.typingText, { color: colors.textSecondary }]}>{t('typing')}</Text>
-                </View>
-            )}
-
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={100}>
-                <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border, borderTopWidth: isHighContrast ? 3 : 1 }]}>
-                    {/* Attachment button removed as it's currently non-functional */}
-
-                    <View style={[styles.inputWrapper, { backgroundColor: colors.background }]}>
-                        <TextInput
-                            style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border, borderWidth: isHighContrast ? 2 : 1 }]}
-                            placeholder={t('type_message')}
-                            placeholderTextColor={colors.textSecondary}
-                            value={inputText}
-                            onChangeText={setInputText}
-                            multiline
-                            maxLength={500}
-                        />
+                {isTyping && (
+                    <View style={styles.typingIndicator}>
+                        <ActivityIndicator size="small" color={colors.primary} />
+                        <Text style={[styles.typingText, { color: colors.textSecondary }]}>
+                            {t('bot_is_typing')}
+                        </Text>
                     </View>
+                )}
 
-                    {inputText.trim() ? (
-                        <TouchableOpacity style={[styles.sendBtn, { backgroundColor: colors.primary }]} onPress={handleSend}>
-                            {/* @ts-ignore */}
-                            <Send size={24} color={isHighContrast ? '#000' : '#fff'} />
-                        </TouchableOpacity>
-                    ) : (
-                        <TouchableOpacity
-                            style={[styles.micBtn, isRecording && styles.micBtnActive, { backgroundColor: isHighContrast ? colors.secondary : '#F59E0B' }]}
-                            onPress={toggleRecording}
-                        >
-                            {/* @ts-ignore */}
-                            <Mic size={24} color={isHighContrast ? '#000' : '#fff'} />
-                        </TouchableOpacity>
+                {/* Input area */}
+                <View style={[styles.inputContainer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
+                    <View style={styles.bottomRow}>
+                        <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                            <TextInput
+                                style={[styles.input, { color: colors.textPrimary }]}
+                                placeholder={t('type_message')}
+                                placeholderTextColor={colors.textSecondary}
+                                value={inputText}
+                                onChangeText={setInputText}
+                                multiline
+                                maxLength={500}
+                                editable={!isRecording}
+                            />
+                            {inputText.trim() ? (
+                                <TouchableOpacity
+                                    style={[styles.sendBtn, { backgroundColor: colors.primary }]}
+                                    onPress={handleSend}
+                                >
+                                    {/* @ts-ignore */}
+                                    <Send size={20} color={isHighContrast ? '#000' : '#fff'} />
+                                </TouchableOpacity>
+                            ) : (
+                                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.micBtn,
+                                            { backgroundColor: isRecording ? '#ef4444' : colors.primary }
+                                        ]}
+                                        onPress={isRecording ? stopRecording : startRecording}
+                                    >
+                                        {isRecording ? (
+                                            /* @ts-ignore */
+                                            <X size={20} color="#fff" />
+                                        ) : (
+                                            /* @ts-ignore */
+                                            <Mic size={20} color={isHighContrast ? '#000' : '#fff'} />
+                                        )}
+                                    </TouchableOpacity>
+                                </Animated.View>
+                            )}
+                        </View>
+                    </View>
+                    {isRecording && (
+                        <Text style={[styles.recordingHint, { color: '#ef4444' }]}>
+                            Recording... tap to stop
+                        </Text>
                     )}
                 </View>
             </KeyboardAvoidingView>
-
-            {isRecording && (
-                <View style={styles.recordingOverlay}>
-                    <Text style={[styles.recordingText, scaledTypography.body]}>{t('listening')}</Text>
-                    <View style={[styles.voiceWave, { backgroundColor: colors.warning }]} />
-                </View>
-            )}
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: {
+        flex: 1,
+    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: SPACING.lg,
+        paddingHorizontal: SPACING.lg,
+        paddingVertical: SPACING.md,
         borderBottomWidth: 1,
-        ...SHADOWS.small,
     },
-    headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
-    title: { ...TYPOGRAPHY.h2, fontSize: 20 },
-    statusRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981' },
-    statusText: { ...TYPOGRAPHY.caption, color: '#10B981', fontWeight: 'bold' },
-    clearBtn: { padding: SPACING.xs },
-    clearText: { ...TYPOGRAPHY.caption },
-    listContent: { padding: SPACING.md, paddingBottom: SPACING.xl },
-    messageRow: { flexDirection: 'row', marginBottom: SPACING.lg, alignItems: 'flex-end', gap: SPACING.sm },
-    botRow: { justifyContent: 'flex-start' },
-    userRow: { justifyContent: 'flex-end' },
-    botAvatar: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-    userAvatar: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-    messageBubble: { maxWidth: '75%', padding: SPACING.md, borderRadius: 20, ...SHADOWS.small },
-    botBubble: { borderBottomLeftRadius: 4 },
-    userBubble: { borderBottomRightRadius: 4 },
-    messageText: { ...TYPOGRAPHY.body, fontSize: 15, lineHeight: 22 },
-    timestampText: { ...TYPOGRAPHY.caption, fontSize: 10, marginTop: 4, textAlign: 'right', opacity: 0.7 },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8, paddingTop: 8, borderTopWidth: 1 },
-    listenText: { ...TYPOGRAPHY.caption, fontWeight: 'bold' },
-    typingContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.xl, gap: SPACING.sm, marginBottom: SPACING.sm },
-    typingText: { ...TYPOGRAPHY.caption, fontStyle: 'italic' },
-    inputContainer: { flexDirection: 'row', alignItems: 'center', padding: SPACING.md, borderTopWidth: 1, gap: SPACING.sm },
-    attachBtn: { padding: 4 },
-    inputWrapper: { flex: 1, borderRadius: 24, paddingHorizontal: SPACING.md, maxHeight: 100 },
-    input: { ...TYPOGRAPHY.body, paddingVertical: SPACING.sm, fontSize: 15 },
-    sendBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', ...SHADOWS.small },
-    micBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F59E0B', justifyContent: 'center', alignItems: 'center', ...SHADOWS.small },
-    micBtnActive: { backgroundColor: '#EF4444' },
-    recordingOverlay: {
-        position: 'absolute',
-        bottom: 80,
-        left: 20,
-        right: 20,
-        backgroundColor: 'rgba(0,0,0,0.8)',
-        borderRadius: 16,
-        padding: SPACING.lg,
+    headerInfo: {
+        flexDirection: 'row',
         alignItems: 'center',
-        zIndex: 100,
     },
-    recordingText: { color: '#fff', fontWeight: 'bold', marginBottom: SPACING.md },
-    voiceWave: { width: '100%', height: 4, borderRadius: 2 },
+    botAvatarSmall: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: SPACING.sm,
+    },
+    headerTitle: {
+        fontSize: TYPOGRAPHY.sizes.lg,
+        fontWeight: TYPOGRAPHY.weights.bold,
+    },
+    onlineIndicatorRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    onlineDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#4ade80',
+        marginRight: 4,
+    },
+    onlineText: {
+        fontSize: TYPOGRAPHY.sizes.xs,
+        color: '#4ade80',
+    },
+    clearText: {
+        fontSize: TYPOGRAPHY.sizes.sm,
+    },
+    messagesList: {
+        padding: SPACING.lg,
+        paddingBottom: SPACING.xl,
+    },
+    messageRow: {
+        flexDirection: 'row',
+        marginBottom: SPACING.lg,
+        maxWidth: '85%',
+    },
+    botRow: {
+        alignSelf: 'start',
+    },
+    userRow: {
+        alignSelf: 'end',
+        flexDirection: 'row-reverse',
+    },
+    botAvatar: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: SPACING.sm,
+        marginTop: 4,
+    },
+    userAvatar: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: SPACING.sm,
+        marginTop: 4,
+    },
+    messageBubble: {
+        padding: SPACING.md,
+        borderRadius: 20,
+        ...SHADOWS.sm,
+    },
+    botBubble: {
+        borderTopLeftRadius: 4,
+    },
+    userBubble: {
+        borderTopRightRadius: 4,
+    },
+    messageText: {
+        lineHeight: 22,
+    },
+    timestampText: {
+        fontSize: 10,
+        alignSelf: 'flex-end',
+        marginTop: 4,
+    },
+    listenBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: SPACING.sm,
+        paddingTop: SPACING.sm,
+        borderTopWidth: 1,
+    },
+    listenText: {
+        fontSize: TYPOGRAPHY.sizes.sm,
+        fontWeight: TYPOGRAPHY.weights.medium,
+        marginLeft: 4,
+    },
+    typingIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: SPACING.xl,
+        paddingBottom: SPACING.md,
+    },
+    typingText: {
+        fontSize: TYPOGRAPHY.sizes.sm,
+        marginLeft: SPACING.sm,
+        fontStyle: 'italic',
+    },
+    inputContainer: {
+        paddingHorizontal: SPACING.lg,
+        paddingVertical: SPACING.md,
+        borderTopWidth: 1,
+    },
+    bottomRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    inputWrapper: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 25,
+        borderWidth: 1,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: 4,
+    },
+    input: {
+        flex: 1,
+        paddingHorizontal: SPACING.sm,
+        paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+        maxHeight: 100,
+        fontSize: TYPOGRAPHY.sizes.md,
+    },
+    sendBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: SPACING.xs,
+    },
+    micBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: SPACING.xs,
+    },
+    recordingHint: {
+        fontSize: 12,
+        fontStyle: 'italic',
+        textAlign: 'center',
+        marginTop: 4,
+    }
 });

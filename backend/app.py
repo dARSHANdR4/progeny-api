@@ -16,6 +16,11 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 import io
+import tempfile
+from groq import Groq
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -23,6 +28,14 @@ CORS(app)
 # Get the path to models directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, 'models')
+
+# Initialize Groq client
+groq_client = None
+if os.getenv("GROQ_API_KEY"):
+    groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    print("✓ Groq AI initialized")
+else:
+    print("⚠️ WARNING: GROQ_API_KEY not found in environment")
 
 print(f"Looking for models in: {MODELS_DIR}")
 
@@ -235,6 +248,75 @@ def predict():
         import traceback
         traceback.print_exc()
         print(f"{'='*60}\n")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/chat/voice', methods=['POST'])
+def voice_chat():
+    """Handle voice chat: Transcribe audio with Whisper and respond with LLM"""
+    if not groq_client:
+        return jsonify({'error': 'Groq client not initialized'}), 500
+        
+    try:
+        if 'audio' not in request.files:
+            return jsonify({'error': 'No audio file provided'}), 400
+            
+        audio_file = request.files['audio']
+        
+        # 1. Save audio to a temporary file
+        # Whisper API requires a file path or a file-like object with a name
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.m4a') as temp_audio:
+            audio_file.save(temp_audio.name)
+            temp_path = temp_audio.name
+            
+        try:
+            # 2. Transcribe using Groq Whisper
+            with open(temp_path, "rb") as file:
+                transcription = groq_client.audio.transcriptions.create(
+                    file=(os.path.basename(temp_path), file.read()),
+                    model="whisper-large-v3",
+                    response_format="json",
+                )
+            
+            user_text = transcription.text
+            print(f"🎙️ Transcribed: {user_text}")
+            
+            if not user_text.strip():
+                return jsonify({'error': 'Could not understand audio'}), 400
+
+            # 3. Generate LLM response
+            # System prompt matching the Next.js backend for consistency
+            SYSTEM_PROMPT = """
+# SYSTEM ROLE — PROGENITURE
+You are Progeniture, the core AI intelligence of Progeny, a mobile-first agricultural intelligence platform.
+Your goal is to guide farmers step-by-step after plant disease detection.
+RESPONSE RULES: Simple, direct language. No markdown. No emojis. 6 steps max.
+"""
+            
+            completion = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT.strip()},
+                    {"role": "user", "content": user_text}
+                ],
+                temperature=0.7,
+                max_tokens=1024,
+            )
+            
+            bot_response = completion.choices[0].message.content
+            
+            return jsonify({
+                'user_text': user_text,
+                'response': bot_response,
+                'success': True
+            })
+            
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+                
+    except Exception as e:
+        print(f'❌ VOICE CHAT ERROR: {e}')
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
