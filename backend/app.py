@@ -29,6 +29,14 @@ CORS(app)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, 'models')
 
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({
+        'status': 'online',
+        'service': 'Progeny ML Service',
+        'endpoints': ['/predict', '/api/chat/voice']
+    })
+
 # Initialize Groq client
 groq_client = None
 if os.getenv("GROQ_API_KEY"):
