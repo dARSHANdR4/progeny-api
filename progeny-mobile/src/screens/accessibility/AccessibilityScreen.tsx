@@ -489,6 +489,18 @@ export default function AccessibilityScreen() {
                                     <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>{t('get_results')}</Text>
                                 </View>
                             </View>
+
+                            <Text style={[styles.howItWorks, { color: colors.textPrimary, marginTop: SPACING.lg }]}>{t('about_the_name')}</Text>
+                            <View style={styles.nameContextBox}>
+                                <View style={[styles.nameItem, { backgroundColor: colors.background }]}>
+                                    <Text style={[styles.nameTitle, { color: colors.primary }]}>{t('progeny_meaning')}</Text>
+                                    <Text style={[styles.nameDesc, { color: colors.textSecondary }]}>{t('progeny_explanation')}</Text>
+                                </View>
+                                <View style={[styles.nameItem, { backgroundColor: colors.background }]}>
+                                    <Text style={[styles.nameTitle, { color: isHighContrast ? colors.primary : '#8B5CF6' }]}>{t('progeniture_meaning')}</Text>
+                                    <Text style={[styles.nameDesc, { color: colors.textSecondary }]}>{t('progeniture_explanation')}</Text>
+                                </View>
+                            </View>
                         </ScrollView>
                     </View>
                 </View>
@@ -659,5 +671,10 @@ const styles = StyleSheet.create({
     contactActions: { flexDirection: 'row', gap: SPACING.md },
     contactBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, borderRadius: 8, gap: SPACING.xs },
     contactBtnText: { color: '#fff', fontWeight: '600', fontSize: 12 },
+    // Name Context Styles
+    nameContextBox: { gap: SPACING.md, marginTop: SPACING.md },
+    nameItem: { padding: SPACING.md, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: '#22C55E' },
+    nameTitle: { ...TYPOGRAPHY.h4, fontWeight: 'bold', marginBottom: 4 },
+    nameDesc: { ...TYPOGRAPHY.caption },
 });
 
