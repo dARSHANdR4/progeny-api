@@ -236,7 +236,7 @@ export default function ChatbotScreen() {
                             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Progeniture</Text>
                             <View style={styles.onlineIndicatorRow}>
                                 <View style={styles.onlineDot} />
-                                <Text style={styles.onlineText}>Progenitor AI Online</Text>
+                                <Text style={styles.onlineText}>{t('online_status')}</Text>
                             </View>
                         </View>
                     </View>
@@ -344,8 +344,8 @@ const styles = StyleSheet.create({
         marginRight: SPACING.sm,
     },
     headerTitle: {
-        fontSize: TYPOGRAPHY.sizes.lg,
-        fontWeight: TYPOGRAPHY.weights.bold,
+        fontSize: 20,
+        fontWeight: 'bold',
     },
     onlineIndicatorRow: {
         flexDirection: 'row',
@@ -359,11 +359,11 @@ const styles = StyleSheet.create({
         marginRight: 4,
     },
     onlineText: {
-        fontSize: TYPOGRAPHY.sizes.xs,
+        fontSize: 10,
         color: '#4ade80',
     },
     clearText: {
-        fontSize: TYPOGRAPHY.sizes.sm,
+        fontSize: 14,
     },
     messagesList: {
         padding: SPACING.lg,
@@ -375,10 +375,10 @@ const styles = StyleSheet.create({
         maxWidth: '85%',
     },
     botRow: {
-        alignSelf: 'start',
+        alignSelf: 'flex-start',
     },
     userRow: {
-        alignSelf: 'end',
+        alignSelf: 'flex-end',
         flexDirection: 'row-reverse',
     },
     botAvatar: {
@@ -426,8 +426,8 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
     },
     listenText: {
-        fontSize: TYPOGRAPHY.sizes.sm,
-        fontWeight: TYPOGRAPHY.weights.medium,
+        fontSize: 14,
+        fontWeight: '500',
         marginLeft: 4,
     },
     typingIndicator: {
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
         paddingBottom: SPACING.md,
     },
     typingText: {
-        fontSize: TYPOGRAPHY.sizes.sm,
+        fontSize: 14,
         marginLeft: SPACING.sm,
         fontStyle: 'italic',
     },
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: SPACING.sm,
         paddingVertical: Platform.OS === 'ios' ? 10 : 8,
         maxHeight: 100,
-        fontSize: TYPOGRAPHY.sizes.md,
+        fontSize: 16,
     },
     sendBtn: {
         width: 40,

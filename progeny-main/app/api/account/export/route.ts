@@ -1,6 +1,8 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     console.log("[Export] Data export request received")
 
