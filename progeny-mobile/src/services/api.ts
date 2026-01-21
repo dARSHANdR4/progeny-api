@@ -386,7 +386,7 @@ export const chatApi = {
             body: JSON.stringify({ message }),
         });
     },
-    voiceChat: async (audioUri: string) => {
+    voiceChat: async (audioUri: string, language?: string) => {
         if (!supabase) throw new Error('Supabase not initialized');
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -398,6 +398,10 @@ export const chatApi = {
             name: filename,
             type: 'audio/m4a',
         } as any);
+
+        if (language) {
+            formData.append('language', language);
+        }
 
         const response = await fetch(`${API_BASE_URL}/api/chat/voice`, {
             method: 'POST',

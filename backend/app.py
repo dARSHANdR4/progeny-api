@@ -277,13 +277,24 @@ def voice_chat():
             temp_path = temp_audio.name
             
         try:
-            # 2. Transcribe using Groq Whisper
+            # 2. Get language code from request (optional)
+            language = request.form.get('language')
+            
+            # 3. Transcribe using Groq Whisper
             with open(temp_path, "rb") as file:
-                transcription = groq_client.audio.transcriptions.create(
-                    file=(os.path.basename(temp_path), file.read()),
-                    model="whisper-large-v3",
-                    response_format="json",
-                )
+                # Basic options for Whisper
+                whisper_options = {
+                    "file": (os.path.basename(temp_path), file.read()),
+                    "model": "whisper-large-v3",
+                    "response_format": "json",
+                }
+                
+                # Add language if provided to improve accuracy
+                if language:
+                    whisper_options["language"] = language
+                    print(f"🎙️ Transcription forced language: {language}")
+
+                transcription = groq_client.audio.transcriptions.create(**whisper_options)
             
             user_text = transcription.text
             print(f"🎙️ Transcribed: {user_text}")
@@ -297,6 +308,12 @@ def voice_chat():
 # CORE IDENTITY: PROGENITURE AI
 You are Progeniture AI, the specialized agricultural expert built for the Progeny platform. 
 You are NOT a generic LLM, assistant, or "computer program". You are a dedicated plant pathologist and farming advisor.
+
+## COMMUNICATION RULE: LANGUAGE PARITY
+EXTREMELY IMPORTANT: Always respond in the EXACT same language the user uses. 
+- If the user speaks Hindi, respond in Hindi.
+- If the user speaks Tamil/Telugu/Kannada/Marathi, respond in that specific language.
+- Maintain a professional and helpful tone in all languages.
 
 ## YOUR MISSION
 Support farmers by diagnosing plant diseases and providing actionable, step-by-step recovery plans. 

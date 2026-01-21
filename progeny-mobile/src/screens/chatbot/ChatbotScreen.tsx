@@ -19,6 +19,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { chatApi } from '../../services/api';
 import { Audio } from 'expo-av';
+import * as Speech from 'expo-speech';
 
 interface Message {
     id: string;
@@ -29,7 +30,7 @@ interface Message {
 
 export default function ChatbotScreen() {
     const { colors, isHighContrast, scaledTypography } = useTheme();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
 
     const INITIAL_MESSAGES: Message[] = [
         {
@@ -150,7 +151,7 @@ export default function ChatbotScreen() {
             setRecording(null);
 
             if (uri) {
-                const data = await chatApi.voiceChat(uri);
+                const data = await chatApi.voiceChat(uri, language);
 
                 // Add user's transcribed message
                 const userMsg: Message = {
@@ -178,6 +179,14 @@ export default function ChatbotScreen() {
         }
     };
 
+    const handleListen = (text: string) => {
+        Speech.stop();
+        Speech.speak(text, {
+            language: language || 'en',
+            rate: 0.9,
+        });
+    };
+
     const renderMessage = ({ item }: { item: Message }) => {
         const isBot = item.sender === 'bot';
         return (
@@ -201,7 +210,10 @@ export default function ChatbotScreen() {
                         {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </Text>
                     {isBot && (
-                        <TouchableOpacity style={[styles.listenBtn, { borderTopColor: colors.border }]}>
+                        <TouchableOpacity
+                            style={[styles.listenBtn, { borderTopColor: colors.border }]}
+                            onPress={() => handleListen(item.text)}
+                        >
                             {/* @ts-ignore */}
                             <Volume2 size={14} color={colors.primary} />
                             <Text style={[styles.listenText, { color: colors.primary }]}>{t('listen')}</Text>
@@ -233,7 +245,7 @@ export default function ChatbotScreen() {
                             <Bot size={16} color={isHighContrast ? '#000' : '#fff'} />
                         </View>
                         <View>
-                            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Progeniture</Text>
+                            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('bot_name')}</Text>
                             <View style={styles.onlineIndicatorRow}>
                                 <View style={styles.onlineDot} />
                                 <Text style={styles.onlineText}>{t('online_status')}</Text>

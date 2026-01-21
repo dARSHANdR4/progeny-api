@@ -3,6 +3,13 @@
   "compilerOptions": {
     "strict": true,
     "skipLibCheck": true,
+    "jsx": "react-native",
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
     "types": [
       "react",
       "react-native"

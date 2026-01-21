@@ -37,7 +37,8 @@
             "enableJetifier": true
           }
         }
-      ]
+      ],
+      "expo-router"
     ],
     "owner": "daytona69",
     "web": {

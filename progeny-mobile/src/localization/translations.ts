@@ -56,7 +56,8 @@ export const translations = {
         bot_greeting: 'Hello! I am Progeniture AI, your agricultural assistant. How can I help you today?',
         online_status: 'Progeniture AI Online',
         listen: 'Listen',
-        typing: 'Typing...',
+        bot_name: 'Progeniture AI',
+        bot_is_typing: 'Progeniture AI is thinking...',
         type_message: 'Type a message...',
 
         // History Screen
@@ -303,7 +304,8 @@ export const translations = {
         bot_greeting: 'नमस्ते! मैं प्रोजेनिचर एआई हूँ, आपका कृषि सहायक। मैं आज आपकी क्या मदद कर सकता हूँ?',
         online_status: 'प्रोजेनिचर एआई ऑनलाइन',
         listen: 'सुनें',
-        typing: 'टाइपिंग...',
+        bot_name: 'प्रोजेनिचर एआई',
+        bot_is_typing: 'प्रोजेनिचर एआई सोच रहा है...',
         type_message: 'संदेश टाइप करें...',
 
         // History Screen
@@ -544,7 +546,8 @@ export const translations = {
         bot_greeting: 'హలో! నేను ప్రోజెనిచర్ AI, మీ వ్యవసాయ సహాయకుడిని. ఈరోజు నేను మీకు ఎలా సహాయం చేయగలను?',
         online_status: 'ప్రోజెనిచర్ AI ఆన్‌లైన్',
         listen: 'వినండి',
-        typing: 'టైపింగ్...',
+        bot_name: 'ప్రోజెనిచర్ AI',
+        bot_is_typing: 'ప్రోజెనిచర్ AI ఆలోచిస్తోంది...',
         type_message: 'సందేశాన్ని టైప్ చేయండి...',
 
         // History Screen
@@ -783,7 +786,8 @@ export const translations = {
         bot_greeting: 'வணக்கம்! நான் புரோஜெனிச்சர் AI, உங்கள் விவசாய உதவியாளர். இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்?',
         online_status: 'புரோஜெனிச்சார் AI ஆன்லைன்',
         listen: 'கேளுங்கள்',
-        typing: 'தட்டச்சு செய்கிறது...',
+        bot_name: 'புரோஜெனிச்சர் AI',
+        bot_is_typing: 'புரோஜெனிச்சர் AI யோசிக்கிறது...',
         type_message: 'செய்தியைத் தட்டச்சு செய்க...',
 
         // History Screen
