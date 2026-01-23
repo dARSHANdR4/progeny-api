@@ -261,6 +261,42 @@ def predict():
         print(f"{'='*60}\n")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/remedies', methods=['POST'])
+def get_remedies():
+    """
+    Get remedies for a disease without image inference
+    Used for on-device YOLO inference where only remedies are needed from server
+    """
+    try:
+        data = request.get_json()
+        disease_name = data.get('disease_name')
+        
+        if not disease_name:
+            return jsonify({'error': 'disease_name parameter required'}), 400
+        
+        print(f"\n🔍 Fetching remedies for: {disease_name}")
+        
+        # Get remedies from database
+        remedies = DISEASE_REMEDIES.get(disease_name, [
+            'Consult with agricultural specialist for proper diagnosis',
+            'Remove and destroy infected plant parts',
+            'Monitor plants regularly for disease progression',
+            'Maintain proper plant spacing and sanitation'
+        ])
+        
+        response_data = {
+            'disease_name': disease_name,
+            'remedies': remedies,
+            'success': True
+        }
+        
+        print(f"✅ Returned {len(remedies)} remedies")
+        return jsonify(response_data)
+        
+    except Exception as e:
+        print(f'❌ REMEDIES ERROR: {e}')
+        return jsonify({'error': str(e), 'success': False}), 500
+
 @app.route('/api/chat/voice', methods=['POST'])
 def voice_chat():
     """Handle voice chat: Transcribe audio with Whisper and respond with LLM"""
