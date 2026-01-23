@@ -127,6 +127,26 @@ export const scanApi = {
 
         return response.json();
     },
+
+    /**
+     * Get remedies for a disease (for on-device YOLO inference)
+     */
+    async getRemedies(diseaseName: string) {
+        const response = await fetch(`${API_BASE_URL}/remedies`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ disease_name: diseaseName }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Failed to fetch remedies' }));
+            throw new Error(error.error || `HTTP ${response.status}`);
+        }
+
+        return response.json();
+    },
 };
 
 // Usage API
@@ -420,46 +440,6 @@ export const chatApi = {
     },
 };
 
-// Remedies API (for on-device YOLO inference)
-const remediesApi = {
-    /**
-     * Get remedies for a specific disease
-     * Used when inference is done on-device and only remedies are needed
-     */
-    async getRemediesForDisease(diseaseName: string): Promise<string[]> {
-        try {
-            const response = await fetch(`${API_BASE_URL}/remedies`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ disease_name: diseaseName }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-
-            if (!data.success || !data.remedies) {
-                throw new Error('Invalid remedies response');
-            }
-
-            return data.remedies;
-        } catch (error) {
-            console.error('Error fetching remedies:', error);
-            // Return fallback remedies
-            return [
-                'Consult with agricultural specialist for proper diagnosis',
-                'Remove and destroy infected plant parts',
-                'Monitor plants regularly for disease progression',
-                'Maintain proper plant spacing and sanitation'
-            ];
-        }
-    },
-};
-
 export default {
     scan: scanApi,
     usage: usageApi,
@@ -467,5 +447,4 @@ export default {
     history: historyApi,
     chat: chatApi,
     community: communityApi,
-    remedies: remediesApi,
 };

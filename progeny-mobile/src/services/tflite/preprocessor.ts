@@ -1,92 +1,42 @@
-/**
- * Optimized Image Preprocessing for Plant Disease Detection
- * This prepares images for the YOLO model (either on-device or server-side)
- */
-
+import * as tf from '@tensorflow/tfjs';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
+import { decode as b64decode } from 'base64-arraybuffer';
 import { MODEL_CONFIG } from './modelConfig';
 
-export interface PreprocessedImage {
-    uri: string;
-    width: number;
-    height: number;
-    base64?: string;
-}
-
-/**
- * Preprocess image for YOLO model inference
- * - Resizes to 416x416
- * - Maintains aspect ratio with padding if needed
- * - Normalizes if required
- */
-export async function preprocessImage(
-    imageUri: string,
-    options: {
-        includeBase64?: boolean;
-        targetSize?: number;
-    } = {}
-): Promise<PreprocessedImage> {
-    const targetSize = options.targetSize || 416;
-
+export const preprocessImage = async (imageUri: string): Promise<tf.Tensor4D> => {
     try {
-        // Resize image to YOLO input size
-        const manipulated = await ImageManipulator.manipulateAsync(
+        // 1. Resize image to model input size (416x416)
+        const manipulatedImage = await ImageManipulator.manipulateAsync(
             imageUri,
-            [
-                {
-                    resize: {
-                        width: targetSize,
-                        height: targetSize,
-                    },
-                },
-            ],
-            {
-                compress: 0.9, // High quality
-                format: ImageManipulator.SaveFormat.JPEG,
-                base64: options.includeBase64,
-            }
+            [{ resize: { width: MODEL_CONFIG.inputSize, height: MODEL_CONFIG.inputSize } }],
+            { format: ImageManipulator.SaveFormat.JPEG, compress: 1 }
         );
 
-        return {
-            uri: manipulated.uri,
-            width: manipulated.width,
-            height: manipulated.height,
-            base64: manipulated.base64,
-        };
+        // 2. Read as base64 and decode to arraybuffer
+        const base64Data = await FileSystem.readAsStringAsync(manipulatedImage.uri, {
+            encoding: 'base64',
+        });
+
+        const arrayBuffer = b64decode(base64Data);
+        const uint8Array = new Uint8Array(arrayBuffer);
+
+        // 3. Convert to tensor using tf.browser.fromPixels fallback for Node/Native
+        // In React Native, we often use decodeJpeg from @tensorflow/tfjs-react-native
+        // but since we want robust behavior, we'll use base64 -> Uint8Array -> Tensor
+        const imageTensor = tf.browser.fromPixels({
+            data: uint8Array,
+            width: MODEL_CONFIG.inputSize,
+            height: MODEL_CONFIG.inputSize,
+        });
+
+        // 4. Normalize to [0, 1] as per model analysis
+        const normalized = imageTensor.toFloat().div(255.0);
+
+        // 5. Add batch dimension [1, 416, 416, 3]
+        return normalized.expandDims(0) as tf.Tensor4D;
     } catch (error) {
-        console.error('Image preprocessing error:', error);
-        throw new Error('Failed to preprocess image');
+        console.error('Preprocessing Error:', error);
+        throw error;
     }
-}
-
-/**
- * Convert image URI to blob for upload
- */
-export async function imageUriToBlob(uri: string): Promise<Blob> {
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    return blob;
-}
-
-/**
- * Validate image before processing
- */
-export function validateImage(uri: string): boolean {
-    if (!uri || uri.trim() === '') {
-        return false;
-    }
-
-    // Check if it's a valid URI format
-    const validPrefixes = ['file://', 'content://', 'http://', 'https://', 'data:'];
-    return validPrefixes.some(prefix => uri.startsWith(prefix));
-}
-
-/**
- * Get optimal image size based on device capabilities
- * For low-end devices, we might want to use smaller sizes
- */
-export function getOptimalImageSize(): number {
-    // For now, always use 416x416 as per YOLO model
-    // In future, we could add device detection here
-    return 416;
-}
+};

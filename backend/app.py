@@ -52,7 +52,7 @@ MODELS = {}
 crop_types = ['apple', 'corn', 'potato', 'tomato']
 
 CLASS_MAPPINGS = {
-    'apple': ['Apple Scab', 'Black Rot', 'Cedar Apple Rust', 'Healthy', 'Apple___Apple_scab', 'Apple___Black_rot', 'Apple___Cedar_apple_rust'],
+    'apple': ['Apple Scab', 'Black Rot', 'Cedar Apple Rust', 'Healthy'],
     'potato': ['Early Blight', 'Late Blight', 'Healthy'],
     'corn': ['Blight', 'Common Rust', 'Healthy'],
     'tomato': ['Bacterial Spot', 'Early Blight', 'Late Blight', 'Leaf Mold', 'Target Spot', 'Healthy']
@@ -263,39 +263,30 @@ def predict():
 
 @app.route('/remedies', methods=['POST'])
 def get_remedies():
-    """
-    Get remedies for a disease without image inference
-    Used for on-device YOLO inference where only remedies are needed from server
-    """
+    """Get remedies for a disease without running inference (for on-device YOLO)"""
     try:
         data = request.get_json()
         disease_name = data.get('disease_name')
         
         if not disease_name:
-            return jsonify({'error': 'disease_name parameter required'}), 400
+            return jsonify({'error': 'disease_name required'}), 400
         
-        print(f"\n🔍 Fetching remedies for: {disease_name}")
-        
-        # Get remedies from database
+        # Get remedies from the DISEASE_REMEDIES dictionary
         remedies = DISEASE_REMEDIES.get(disease_name, [
-            'Consult with agricultural specialist for proper diagnosis',
-            'Remove and destroy infected plant parts',
-            'Monitor plants regularly for disease progression',
-            'Maintain proper plant spacing and sanitation'
+            'Consult with agricultural specialist',
+            'Remove infected plant parts',
+            'Monitor plants regularly',
+            'Practice good crop hygiene'
         ])
         
-        response_data = {
+        return jsonify({
             'disease_name': disease_name,
             'remedies': remedies,
-            'success': True
-        }
-        
-        print(f"✅ Returned {len(remedies)} remedies")
-        return jsonify(response_data)
-        
+            'source': 'on-device' if disease_name in DISEASE_REMEDIES else 'fallback'
+        })
     except Exception as e:
-        print(f'❌ REMEDIES ERROR: {e}')
-        return jsonify({'error': str(e), 'success': False}), 500
+        print(f'\n❌ REMEDIES ERROR: {e}')
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/chat/voice', methods=['POST'])
 def voice_chat():

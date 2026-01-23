@@ -20,21 +20,21 @@ def analyze_tflite_model(model_path):
     """Analyze a TFLite model and extract all metadata"""
     
     if not os.path.exists(model_path):
-        print(f"❌ ERROR: Model file not found: {model_path}")
+        print(f"ERROR: Model file not found: {model_path}")
         sys.exit(1)
     
     print("="*70)
-    print("🔍 YOLO TFLITE MODEL ANALYSIS")
+    print("YOLO TFLITE MODEL ANALYSIS")
     print("="*70)
-    print(f"\n📁 Model Path: {model_path}")
-    print(f"📦 File Size: {os.path.getsize(model_path) / (1024*1024):.2f} MB")
+    print(f"\nModel Path: {model_path}")
+    print(f"File Size: {os.path.getsize(model_path) / (1024*1024):.2f} MB")
     
     # Load interpreter
     try:
         interpreter = tf.lite.Interpreter(model_path=model_path)
         interpreter.allocate_tensors()
     except Exception as e:
-        print(f"\n❌ ERROR loading model: {e}")
+        print(f"\nERROR loading model: {e}")
         sys.exit(1)
     
     # Get input details
@@ -42,7 +42,7 @@ def analyze_tflite_model(model_path):
     output_details = interpreter.get_output_details()
     
     print("\n" + "="*70)
-    print("📥 INPUT SPECIFICATION")
+    print("INPUT SPECIFICATION")
     print("="*70)
     
     for i, input_detail in enumerate(input_details):
@@ -57,10 +57,10 @@ def analyze_tflite_model(model_path):
             zero_point = input_detail['quantization'][1]
             if scale != 0.0 or zero_point != 0:
                 print(f"  Quantization: scale={scale}, zero_point={zero_point}")
-                print(f"  ⚠️  Model uses quantized input!")
+                print(f"  WARNING: Model uses quantized input!")
     
     print("\n" + "="*70)
-    print("📤 OUTPUT SPECIFICATION")
+    print("OUTPUT SPECIFICATION")
     print("="*70)
     
     for i, output_detail in enumerate(output_details):
@@ -73,11 +73,11 @@ def analyze_tflite_model(model_path):
         shape = output_detail['shape']
         if len(shape) >= 2:
             num_classes = shape[-1]
-            print(f"  📊 Detected Classes: {num_classes}")
+            print(f"  Detected Classes: {num_classes}")
     
     # Test inference
     print("\n" + "="*70)
-    print("🧪 TEST INFERENCE")
+    print("TEST INFERENCE")
     print("="*70)
     
     input_shape = input_details[0]['shape']
@@ -102,7 +102,7 @@ def analyze_tflite_model(model_path):
         interpreter.invoke()
         output = interpreter.get_tensor(output_details[0]['index'])
         
-        print(f"✅ Inference successful!")
+        print(f"Inference successful!")
         print(f"\nOutput shape: {output.shape}")
         print(f"Output dtype: {output.dtype}")
         print(f"Output range: [{output.min():.4f}, {output.max():.4f}]")
@@ -112,39 +112,39 @@ def analyze_tflite_model(model_path):
             print(f"\nSample predictions (first 10 classes):")
             print(output[0][:10])
     except Exception as e:
-        print(f"❌ Inference failed: {e}")
+        print(f"Inference failed: {e}")
     
     # Recommendations
     print("\n" + "="*70)
-    print("💡 RECOMMENDATIONS")
+    print("RECOMMENDATIONS")
     print("="*70)
     
     input_shape_str = str(input_shape)
     
     if input_dtype == np.uint8:
-        print("\n✅ Model uses uint8 input - no normalization needed in preprocessing")
+        print("\nModel uses uint8 input - no normalization needed in preprocessing")
         print("   Just resize images to the expected shape")
     else:
-        print("\n⚠️  Model uses float32 input - normalization REQUIRED")
+        print("\nModel uses float32 input - normalization REQUIRED")
         print("   Images must be normalized to [0, 1] range: image / 255.0")
     
     if input_shape[1] == input_shape[2]:
-        print(f"\n✅ Square input: {input_shape[1]}x{input_shape[2]}")
+        print(f"\nSquare input: {input_shape[1]}x{input_shape[2]}")
     else:
-        print(f"\n⚠️  Non-square input: {input_shape[1]}x{input_shape[2]}")
+        print(f"\nNon-square input: {input_shape[1]}x{input_shape[2]}")
         print("   Make sure image resizing maintains aspect ratio correctly")
     
     # Check model size
     model_size_mb = os.path.getsize(model_path) / (1024*1024)
     if model_size_mb > 50:
-        print(f"\n⚠️  Large model ({model_size_mb:.1f} MB) - consider dynamic download instead of bundling")
+        print(f"\nLarge model ({model_size_mb:.1f} MB) - consider dynamic download instead of bundling")
     elif model_size_mb > 25:
-        print(f"\n⚡ Medium model ({model_size_mb:.1f} MB) - acceptable for bundling")
+        print(f"\nMedium model ({model_size_mb:.1f} MB) - acceptable for bundling")
     else:
-        print(f"\n✅ Small model ({model_size_mb:.1f} MB) - perfect for bundling in app")
+        print(f"\nSmall model ({model_size_mb:.1f} MB) - perfect for bundling in app")
     
     print("\n" + "="*70)
-    print("📋 NEXT STEPS")
+    print("NEXT STEPS")
     print("="*70)
     
     print(f"""
@@ -165,19 +165,32 @@ def analyze_tflite_model(model_path):
 """)
     
     print("="*70)
-    print("✅ ANALYSIS COMPLETE")
+    print("ANALYSIS COMPLETE")
     print("="*70)
     
-    return {
+    results = {
         'input_shape': input_shape.tolist(),
         'input_dtype': str(input_dtype),
-        'output_shape': output_details[0]['shape'].tolist(),
-        'num_classes': output_details[0]['shape'][-1],
-        'model_size_mb': model_size_mb
+        'output_shape': [s.tolist() if hasattr(s, 'tolist') else s for s in output_details[0]['shape']],
+        'num_classes': int(output_details[0]['shape'][-1]),
+        'model_size_mb': float(model_size_mb)
     }
+    
+    # Clean output shape to be surely serializable
+    results['output_shape'] = [int(i) for i in output_details[0]['shape']]
+    
+    import json
+    with open('model_analysis_results.json', 'w') as f:
+        json.dump(results, f, indent=2)
+    print(f"\nResults saved to model_analysis_results.json")
+    
+    return results
 
 
 if __name__ == '__main__':
+    # Force UTF-8 encoding for stdout
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     if len(sys.argv) != 2:
         print("Usage: python analyze_yolo_model.py <path_to_model.tflite>")
         print("\nExample:")

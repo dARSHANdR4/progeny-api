@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
           comments:post_comments(id)
         `)
         .order('created_at', { ascending: false }),
-      
+
       // User's likes in parallel
       adminSupabase
         .from('post_likes')
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     const postsWithRoles = posts.map((post: any) => {
       const sub = post.subscription?.[0];
       const isPremium = sub?.status === 'active' && sub?.expires_at >= now;
-      
+
       return {
         id: post.id,
         user_id: post.user_id,

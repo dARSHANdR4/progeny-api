@@ -1,0 +1,16 @@
+{
+  "input_shape": [
+    1,
+    416,
+    416,
+    3
+  ],
+  "input_dtype": "<class 'numpy.float32'>",
+  "output_shape": [
+    1,
+    20,
+    3549
+  ],
+  "num_classes": 3549,
+  "model_size_mb": 5.846968650817871
+}
