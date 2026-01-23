@@ -52,7 +52,7 @@ MODELS = {}
 crop_types = ['apple', 'corn', 'potato', 'tomato']
 
 CLASS_MAPPINGS = {
-    'apple': ['Alternaria', 'Insect', 'MLB', 'Mosaic', 'Multiple', 'Powdery Mildew', 'Scab'],
+    'apple': ['Apple Scab', 'Black Rot', 'Cedar Apple Rust', 'Healthy'],
     'potato': ['Early Blight', 'Late Blight', 'Healthy'],
     'corn': ['Blight', 'Common Rust', 'Healthy'],
     'tomato': ['Bacterial Spot', 'Early Blight', 'Late Blight', 'Leaf Mold', 'Target Spot', 'Healthy']
@@ -75,103 +75,106 @@ for crop in crop_types:
     except Exception as e:
         print(f'✗ Error loading {crop} model: {e}')
 
-# Disease remedies
+# Disease remedies - 4 detailed points per disease
 DISEASE_REMEDIES = {
-    'Healthy': ['Continue regular monitoring', 'Maintain proper watering', 'Keep area clean'],
-    # Apple
-    'Alternaria': [
-        'Remove and destroy infected leaves and fruit',
-        'Apply fungicides containing copper or mancozeb',
-        'Improve air circulation by pruning',
-        'Avoid overhead irrigation'
+    'Healthy': [
+        'Continue regular monitoring and scouting every 7-10 days',
+        'Maintain balanced NPK fertilization (10-10-10 for general crops)',
+        'Ensure proper irrigation - 1-2 inches per week depending on crop',
+        'Practice crop rotation to prevent future disease buildup'
     ],
-    'Insect': [
-        'Identify specific pest for targeted treatment',
-        'Use appropriate insecticides or biological controls',
-        'Remove heavily infested plant parts',
-        'Encourage beneficial insects'
+    
+    # ===== APPLE DISEASES =====
+    'Apple Scab': [
+        'Apply preventive fungicides (Captan 50WP at 2-3 lb/acre or Myclobutanil) starting at green tip stage',
+        'Remove and destroy all fallen leaves and infected fruit to reduce overwintering spores',
+        'Prune trees to improve air circulation - target 25-30% canopy thinning',
+        'Plant resistant varieties like Liberty, Freedom, or Enterprise for long-term management'
     ],
-    'MLB': [
-        'Remove fallen leaves to reduce spore buildup',
-        'Apply fungicides in early spring',
-        'Prune trees for better air circulation',
-        'Choose resistant apple varieties'
+    
+    'Black Rot': [
+        'Remove all infected fruit, branches, and mummified apples within 100 feet of trees',
+        'Apply fungicides containing Thiophanate-methyl or Captan during pink and petal fall stages',
+        'Prune out dead and diseased wood during dormant season (late winter)',
+        'Avoid overhead irrigation and maintain proper tree spacing (15-20 feet minimum)'
     ],
-    'Mosaic': [
-        'Remove and destroy infected plants immediately',
-        'Control aphid populations',
-        'Use virus-free planting material',
-        'Keep area weed-free'
+    
+    'Cedar Apple Rust': [
+        'Remove nearby cedar/juniper trees within 1/4 mile radius if possible',
+        'Apply protective fungicides (Myclobutanil or Propiconazole) from pink bud through 3 weeks after petal fall',
+        'Use resistant apple varieties like Freedom, Liberty, Redfree, or Williams Pride',
+        'Monitor cedar trees for galls in spring and remove them before they release spores'
     ],
-    'Multiple': [
-        'Consult with agricultural specialist',
-        'Implement integrated disease management',
-        'Improve overall plant health',
-        'Monitor plants closely'
-    ],
-    'Powdery Mildew': [
-        'Apply sulfur or potassium bicarbonate sprays',
-        'Improve air circulation',
-        'Avoid overhead watering',
-        'Remove infected plant parts'
-    ],
-    'Scab': [
-        'Apply fungicides during primary infection period',
-        'Remove fallen leaves and infected fruit',
-        'Prune for better air circulation',
-        'Choose scab-resistant varieties'
-    ],
-    # Corn
+    
+    # ===== CORN DISEASES =====
     'Blight': [
-        'Apply appropriate fungicides',
-        'Remove and destroy infected plant material',
-        'Practice crop rotation',
-        'Ensure proper spacing for air circulation'
+        'Apply foliar fungicides (Azoxystrobin or Pyraclostrobin) when disease first appears on lower leaves',
+        'Remove and destroy infected plant debris immediately after harvest',
+        'Practice 2-3 year crop rotation with non-host crops like soybeans or wheat',
+        'Plant resistant hybrids and ensure proper plant spacing (8-10 inches in-row) for air circulation'
     ],
+    
     'Common Rust': [
-        'Apply fungicides if infection is severe',
-        'Plant resistant varieties',
-        'Remove volunteer corn plants',
-        'Monitor fields regularly'
+        'Apply triazole fungicides (Tebuconazole or Propiconazole) if disease appears before tasseling',
+        'Plant resistant or moderately resistant corn hybrids',
+        'Remove volunteer corn plants that can harbor rust spores between seasons',
+        'Scout fields weekly during vegetative stages and apply fungicide at <5% leaf infection threshold'
     ],
-    # Potato/Tomato
+    
+    # ===== POTATO DISEASES =====
     'Early Blight': [
-        'Apply chlorothalonil or copper-based fungicides',
-        'Remove lower leaves that touch the ground',
-        'Mulch around plants to prevent soil splash',
-        'Practice crop rotation'
+        'Apply protectant fungicides (Chlorothalonil 720g/L at 2L/ha) starting when plants are 6-8 inches tall',
+        'Remove and destroy lower leaves that touch soil to reduce initial infection',
+        'Mulch with straw (4-6 inches deep) to prevent soil splash onto foliage',
+        'Practice 3-4 year rotation with non-solanaceous crops and avoid overhead irrigation'
     ],
+    
     'Late Blight': [
-        'Apply fungicides immediately upon detection',
-        'Remove and destroy infected plants',
-        'Avoid overhead irrigation',
-        'Monitor weather conditions'
+        'URGENT: Apply systemic fungicides (Metalaxyl + Mancozeb) immediately upon detection',
+        'Destroy entire infected plants including tubers - do not compost',
+        'Monitor weather for blight-favorable conditions (cool, wet weather 15-25°C with RH >90%)',
+        'Use certified disease-free seed potatoes and hill rows adequately to protect tubers'
     ],
+    
+    # ===== TOMATO DISEASES =====
     'Bacterial Spot': [
-        'Apply copper-based bactericides',
-        'Use disease-free seeds and transplants',
-        'Avoid overhead watering',
-        'Remove and destroy infected plants'
+        'Apply copper-based bactericides (Copper hydroxide 53.8% at 1.5 lb/acre) preventively',
+        'Use only certified disease-free transplants and saved seeds from healthy fruit',
+        'Avoid working in wet fields - wait until foliage is completely dry',
+        'Practice 2-year rotation and destroy all crop debris immediately after final harvest'
     ],
+    
     'Leaf Mold': [
-        'Improve ventilation in greenhouse or garden',
-        'Reduce humidity levels',
-        'Remove and destroy infected leaves',
-        'Apply appropriate fungicides'
+        'Improve greenhouse ventilation - maintain relative humidity below 85%',
+        'Space plants 18-24 inches apart and prune lower leaves for air movement',
+        'Remove and destroy infected leaves immediately - do not compost',
+        'Apply fungicides (Chlorothalonil or Mancozeb) at first sign of yellowing on upper leaf surfaces'
     ],
+    
     'Target Spot': [
-        'Apply fungicides containing chlorothalonil',
-        'Remove infected plant debris',
-        'Improve air circulation',
-        'Practice crop rotation'
+        'Apply fungicides containing Chlorothalonil (720g/L at 2-3 L/ha) at 7-10 day intervals',
+        'Remove all infected lower leaves and crop debris to reduce spore load',
+        'Improve air circulation through wider plant spacing (24-30 inches) and staking',
+        'Mulch with black plastic to prevent soil splash and practice 2-3 year crop rotation'
     ]
 }
+
 
 def read_file_as_image(data) -> np.ndarray:
     """Preprocess image for model input"""
     image = Image.open(io.BytesIO(data))
+    
+    # Convert to RGB if needed (handles RGBA, grayscale, etc.)
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+    
+    # Resize to model input size
     image = image.resize((256, 256))
+    
+    # Convert to array and normalize to [0, 1] range
     image_array = np.array(image)
+    image_array = image_array.astype('float32') / 255.0
+    
     return image_array
 
 @app.route('/password-reset-success.html', methods=['GET'])
