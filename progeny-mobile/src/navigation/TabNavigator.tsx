@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Camera, History, Users, MessageSquare, Accessibility } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -16,6 +17,7 @@ const Tab = createBottomTabNavigator();
 const TabNavigator = () => {
     const { colors, isDark, isHighContrast } = useTheme();
     const { t } = useLanguage();
+    const insets = useSafeAreaInsets();
 
     return (
         <Tab.Navigator
@@ -26,8 +28,8 @@ const TabNavigator = () => {
                     backgroundColor: colors.surface,
                     borderTopWidth: isHighContrast ? 2 : 1,
                     borderTopColor: colors.border,
-                    height: 65,
-                    paddingBottom: 10,
+                    height: 65 + insets.bottom, // Add bottom inset for system nav bar
+                    paddingBottom: insets.bottom > 0 ? insets.bottom : 10, // Use inset or default
                     paddingTop: 8,
                 },
                 headerStyle: {
