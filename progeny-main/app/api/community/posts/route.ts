@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
         .from('posts')
         .select(`
           *,
-          author:profiles!posts_user_id_fkey(id, is_admin),
+          author:profiles(id, is_admin),
           subscription:subscriptions(user_id, status, expires_at),
           likes:post_likes(id),
           comments:post_comments(id)
@@ -66,21 +66,24 @@ export async function GET(request: NextRequest) {
     // 3. Process posts with pre-fetched data
     const now = new Date().toISOString();
     const postsWithRoles = posts.map((post: any) => {
-      const sub = post.subscription?.[0];
+      // Handle potential object or array return from Supabase relations
+      const author = Array.isArray(post.author) ? post.author[0] : post.author;
+      const sub = Array.isArray(post.subscription) ? post.subscription[0] : post.subscription;
+      
       const isPremium = sub?.status === 'active' && sub?.expires_at >= now;
 
       return {
         id: post.id,
         user_id: post.user_id,
-        author_name: post.author_name,
+        author_name: post.user_name || post.author_name, // Fallback to user_name from table if author join lags
         content: post.content,
         image_url: post.image_url,
         created_at: post.created_at,
-        is_admin: post.author?.[0]?.is_admin || false,
+        is_admin: author?.is_admin || false,
         is_premium: isPremium,
         user_liked: likedPostIds.has(post.id),
-        likes_count: post.likes?.length || 0,
-        comments_count: post.comments?.length || 0
+        likes_count: post.likes?.length || post.likes_count || 0,
+        comments_count: post.comments?.length || post.comments_count || 0
       };
     });
 
