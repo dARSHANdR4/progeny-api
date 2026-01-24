@@ -29,15 +29,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // 2. Fetch all data in PARALLEL (reduces from ~500ms to ~150ms)
+    // 2. Fetch all data in PARALLEL
     const [postsResult, myLikesResult] = await Promise.all([
-      // Main posts query WITH joins for performance
+      // Main posts query with NESTED joins: Posts -> Profiles -> Subscriptions
       adminSupabase
         .from('posts')
         .select(`
           *,
-          author:profiles(id, is_admin),
-          subscription:subscriptions(user_id, status, expires_at),
+          author:profiles!posts_user_id_fkey(
+            id, 
+            full_name,
+            is_admin,
+            subscription:subscriptions!subscriptions_user_id_fkey(
+              status, 
+              expires_at
+            )
+          ),
           likes:post_likes(id),
           comments:post_comments(id)
         `)
@@ -55,7 +62,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         error: "Error fetching posts",
         details: postsResult.error.message,
-        hint: "Make sure you ran the SQL sync script in community_fix_plan.md"
+        hint: "Run the UPDATED SQL in community_fix_plan.md"
       }, { status: 500 })
     }
 
@@ -70,20 +77,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ posts: [] })
     }
 
-    // 3. Process posts with pre-fetched data
+    // 3. Process posts with pre-fetched nested data
     const now = new Date().toISOString();
     const postsWithRoles = posts.map((post: any) => {
-      // Handle potential object or array return from Supabase relations
-      // Sometimes Supabase returns an array for a single-valued join if the schema isn't explicit
-      const author = Array.isArray(post.author) ? post.author[0] : post.author;
-      const sub = Array.isArray(post.subscription) ? post.subscription[0] : post.subscription;
+      // Profiles is an object (or null) because of the !foreign_key hint
+      const author = post.author;
+      // Subscriptions is usually an array in Supabase joins
+      const sub = Array.isArray(author?.subscription) ? author.subscription[0] : author?.subscription;
 
       const isPremium = sub?.status === 'active' && (sub?.expires_at ? sub.expires_at >= now : true);
 
       return {
         id: post.id,
         user_id: post.user_id,
-        author_name: author?.full_name || post.user_name || post.author_name || 'Anonymous',
+        author_name: author?.full_name || post.user_name || 'Anonymous',
         content: post.content,
         image_url: post.image_url,
         created_at: post.created_at,
