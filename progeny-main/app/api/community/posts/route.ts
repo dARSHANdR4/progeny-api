@@ -93,6 +93,7 @@ export async function GET(request: NextRequest) {
         user_name: author?.full_name || post.user_name || 'Anonymous',
         content: post.content,
         image_url: post.image_url,
+        location: post.location || 'Remote Farmer',
         created_at: post.created_at,
         is_admin: author?.is_admin || false,
         is_premium: isPremium,
