@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
       return {
         id: post.id,
         user_id: post.user_id,
-        author_name: author?.full_name || post.user_name || 'Anonymous',
+        user_name: author?.full_name || post.user_name || 'Anonymous',
         content: post.content,
         image_url: post.image_url,
         created_at: post.created_at,
