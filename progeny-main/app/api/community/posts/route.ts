@@ -51,15 +51,22 @@ export async function GET(request: NextRequest) {
     ]);
 
     if (postsResult.error) {
-      console.error("[Community API] Error fetching posts:", postsResult.error)
-      return NextResponse.json({ error: "Error fetching posts" }, { status: 500 })
+      console.error("[Community API] CRITICAL ERROR fetching posts:", JSON.stringify(postsResult.error, null, 2))
+      return NextResponse.json({
+        error: "Error fetching posts",
+        details: postsResult.error.message,
+        hint: "Make sure you ran the SQL sync script in community_fix_plan.md"
+      }, { status: 500 })
     }
 
     const posts = postsResult.data || [];
     const myLikes = myLikesResult.data || [];
     const likedPostIds = new Set(myLikes.map(l => l.post_id));
 
+    console.log(`[Community API] Found ${posts.length} posts for user ${user.id}`);
+
     if (!posts || posts.length === 0) {
+      console.warn('[Community API] No posts found - returning empty array');
       return NextResponse.json({ posts: [] })
     }
 
@@ -67,15 +74,16 @@ export async function GET(request: NextRequest) {
     const now = new Date().toISOString();
     const postsWithRoles = posts.map((post: any) => {
       // Handle potential object or array return from Supabase relations
+      // Sometimes Supabase returns an array for a single-valued join if the schema isn't explicit
       const author = Array.isArray(post.author) ? post.author[0] : post.author;
       const sub = Array.isArray(post.subscription) ? post.subscription[0] : post.subscription;
-      
-      const isPremium = sub?.status === 'active' && sub?.expires_at >= now;
+
+      const isPremium = sub?.status === 'active' && (sub?.expires_at ? sub.expires_at >= now : true);
 
       return {
         id: post.id,
         user_id: post.user_id,
-        author_name: post.user_name || post.author_name, // Fallback to user_name from table if author join lags
+        author_name: author?.full_name || post.user_name || post.author_name || 'Anonymous',
         content: post.content,
         image_url: post.image_url,
         created_at: post.created_at,
