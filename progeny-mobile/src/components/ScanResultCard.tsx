@@ -12,6 +12,7 @@ export interface ScanResult {
     remedies: string[];
     created_at: string;
     crop_type: string;
+    inference_source?: 'tflite' | 'onnx' | 'cloud';
 }
 
 interface ScanResultCardProps {

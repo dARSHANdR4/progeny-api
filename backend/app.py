@@ -52,7 +52,7 @@ MODELS = {}
 crop_types = ['apple', 'corn', 'potato', 'tomato']
 
 CLASS_MAPPINGS = {
-    'apple': ['Alternaria', 'Insect', 'MLB', 'Mosaic', 'Multiple', 'Powdery Mildew', 'Scab'],
+    'apple': ['Apple Scab', 'Black Rot', 'Cedar Apple Rust', 'Healthy'],
     'potato': ['Early Blight', 'Late Blight', 'Healthy'],
     'corn': ['Blight', 'Common Rust', 'Healthy'],
     'tomato': ['Bacterial Spot', 'Early Blight', 'Late Blight', 'Leaf Mold', 'Target Spot', 'Healthy']
@@ -84,48 +84,26 @@ DISEASE_REMEDIES = {
         'Practice crop rotation to prevent future disease buildup'
     ],
     
-    # ===== APPLE DISEASES (Aligned with fallback model) =====
-    'Alternaria': [
-        'Remove and destroy infected leaves and fruit',
-        'Apply fungicides containing copper or mancozeb',
-        'Improve air circulation by pruning',
-        'Avoid overhead irrigation to reduce leaf wetness'
+    # ===== APPLE DISEASES =====
+    'Apple Scab': [
+        'Apply preventive fungicides (Captan 50WP at 2-3 lb/acre or Myclobutanil) starting at green tip stage',
+        'Remove and destroy all fallen leaves and infected fruit to reduce overwintering spores',
+        'Prune trees to improve air circulation - target 25-30% canopy thinning',
+        'Plant resistant varieties like Liberty, Freedom, or Enterprise for long-term management'
     ],
-    'Insect': [
-        'Identify specific insect pest for targeted treatment',
-        'Use appropriate insecticides or biological controls',
-        'Remove heavily infested plant parts',
-        'Encourage beneficial insects like ladybugs'
+    
+    'Black Rot': [
+        'Remove all infected fruit, branches, and mummified apples within 100 feet of trees',
+        'Apply fungicides containing Thiophanate-methyl or Captan during pink and petal fall stages',
+        'Prune out dead and diseased wood during dormant season (late winter)',
+        'Avoid overhead irrigation and maintain proper tree spacing (15-20 feet minimum)'
     ],
-    'MLB': [
-        'Remove fallen leaves to reduce spore buildup',
-        'Apply fungicides during early spring before symptoms appear',
-        'Prune trees to improve air circulation',
-        'Choose resistant apple varieties for future planting'
-    ],
-    'Mosaic': [
-        'Remove and destroy infected plants immediately',
-        'Control aphid populations as they spread the virus',
-        'Use virus-free planting material',
-        'Keep area weed-free to eliminate virus reservoirs'
-    ],
-    'Multiple': [
-        'Consult with agricultural specialist for proper diagnosis',
-        'Implement integrated disease management approach',
-        'Improve overall plant health through proper nutrition',
-        'Apply broad-spectrum fungicides as recommended'
-    ],
-    'Powdery Mildew': [
-        'Apply sulfur or potassium bicarbonate sprays',
-        'Improve air circulation around plants',
-        'Avoid overhead watering',
-        'Remove infected plant parts'
-    ],
-    'Scab': [
-        'Apply fungicides during primary infection period',
-        'Remove fallen leaves to reduce overwintering spores',
-        'Prune for better air circulation',
-        'Apply protective fungicide sprays in early spring'
+    
+    'Cedar Apple Rust': [
+        'Remove nearby cedar/juniper trees within 1/4 mile radius if possible',
+        'Apply protective fungicides (Myclobutanil or Propiconazole) from pink bud through 3 weeks after petal fall',
+        'Use resistant apple varieties like Freedom, Liberty, Redfree, or Williams Pride',
+        'Monitor cedar trees for galls in spring and remove them before they release spores'
     ],
     
     # ===== CORN DISEASES =====

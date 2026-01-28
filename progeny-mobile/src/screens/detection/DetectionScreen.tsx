@@ -18,7 +18,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { scanApi } from '../../services/api';
-import { yoloInference } from '../../services/tflite/YOLOInference';
+import { yoloCascade } from '../../services/tflite/YOLOCascadeService';
 import CropSelector from '../../components/CropSelector';
 import ScanResultCard, { ScanResult } from '../../components/ScanResultCard';
 import SubscriptionModal from '../../components/SubscriptionModal';
@@ -50,10 +50,10 @@ export default function DetectionScreen() {
     const [showSubscription, setShowSubscription] = useState(false);
     const [hasAttemptedAutoRefresh, setHasAttemptedAutoRefresh] = useState(false);
 
-    // Initialize YOLO TFLite Service on mount
+    // Initialize YOLO Cascade Service on mount
     useEffect(() => {
-        yoloInference.initialize().catch(err => {
-            console.error('YOLO Model Init Error:', err);
+        yoloCascade.initialize().catch(err => {
+            console.error('YOLO Cascade Init Error:', err);
         });
     }, []);
 
@@ -126,46 +126,36 @@ export default function DetectionScreen() {
         setError(null);
 
         try {
-            // 1. Try on-device YOLO Inference first
-            console.log('👀 Starting on-device YOLO analysis for crop:', selectedCrop);
-            const prediction = await yoloInference.predict(imageUri, selectedCrop.toLowerCase());
+            // Use the YOLO Cascade Service (TFLite → ONNX → Cloud ML)
+            console.log('👀 Starting YOLO cascade analysis for crop:', selectedCrop);
+            const prediction = await yoloCascade.predict(imageUri, selectedCrop.toLowerCase());
 
             if (prediction) {
-                console.log('✅ YOLO prediction successful:', prediction.disease_name);
+                console.log(`✅ Detection successful via ${prediction.source.toUpperCase()}:`, prediction.disease_name);
 
-                // 2. Fetch remedies for the detected disease
+                // Fetch remedies for the detected disease
                 const remediesResponse = await scanApi.getRemedies(prediction.disease_name);
 
                 setScanResult({
-                    id: `local-${Date.now()}`,
-                    crop_type: prediction.crop || selectedCrop,
+                    id: `${prediction.source}-${Date.now()}`,
+                    crop_type: prediction.crop_type || selectedCrop,
                     disease_name: prediction.disease_name,
                     confidence_score: prediction.confidence_score,
                     remedies: remediesResponse.remedies,
                     created_at: new Date().toISOString(),
+                    inference_source: prediction.source, // Track which model was used
                 });
 
                 // Sync usage with server
                 await refreshUserData(true);
             } else {
-                console.log('⚠️ YOLO found no disease, falling back to server...');
-                // Fallback to server if YOLO detects nothing or fails
-                const response = await scanApi.scan(imageUri, selectedCrop);
-                setScanResult(response.scan);
-                await refreshUserData(true);
+                setError(t('no_disease_detected'));
             }
         } catch (err: any) {
-            console.warn('❌ On-device inference error, falling back to server:', err);
-            try {
-                // Secondary fallback to server
-                const response = await scanApi.scan(imageUri, selectedCrop);
-                setScanResult(response.scan);
-                await refreshUserData(true);
-            } catch (fallbackErr: any) {
-                setError(fallbackErr.message || t('something_went_wrong'));
-                if (fallbackErr.message?.includes('limit')) {
-                    Alert.alert(t('limit_reached'), fallbackErr.message);
-                }
+            console.error('❌ All detection methods failed:', err);
+            setError(err.message || t('something_went_wrong'));
+            if (err.message?.includes('limit')) {
+                Alert.alert(t('limit_reached'), err.message);
             }
         } finally {
             setIsScanning(false);
