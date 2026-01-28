@@ -1,107 +1,86 @@
 import * as tf from '@tensorflow/tfjs';
-import { bundleResourceIO } from '@tensorflow/tfjs-react-native';
+import '@tensorflow/tfjs-react-native';
 import { Asset } from 'expo-asset';
+import { loadTensorflowModel } from 'react-native-fast-tflite';
 import { preprocessImage } from './preprocessor';
-import { MODEL_CONFIG, CLASS_NAMES, CROP_LABELS } from './modelConfig';
+import { MODEL_CONFIG, formatPrediction } from './modelConfig';
 
 class YOLOInferenceService {
-    private model: tf.GraphModel | null = null;
+    private model: any = null;
     private isInitialized = false;
 
     async initialize() {
         if (this.isInitialized) return;
 
         try {
-            console.log('🔄 Initializing YOLO Model...');
+            console.log('[YOLO] Initializing TensorFlow & Native TFLite...');
             await tf.ready();
 
-            const modelAsset = Asset.fromModule(require('../../assets/models/plant_disease.tflite'));
-            await modelAsset.downloadAsync();
-
+            // 1. Load the model asset
+            const modelAsset = Asset.fromModule(require('../../../assets/models/plant_disease.tflite'));
             if (!modelAsset.localUri) {
-                throw new Error('Could not get local URI for model asset');
+                await modelAsset.downloadAsync();
             }
 
-            // Fix for "Expected 2 arguments, but got 1" lint error
-            // In @tensorflow/tfjs-react-native, bundleResourceIO often expects (modelJson, modelWeights)
-            // If it's a single file model, we might need a dummy or a specific loader.
-            // For now, providing a placeholder to satisfy the type definition.
-            this.model = await tf.loadGraphModel(bundleResourceIO(modelAsset as any, modelAsset as any));
+            // 2. Load the model into the native bridge
+            // We use the GPU delegate for maximum speed on mobile
+            this.model = await loadTensorflowModel(modelAsset.localUri || modelAsset.uri, 'gpu');
 
-            // Warmup inference
-            const dummyInput = tf.zeros([1, MODEL_CONFIG.inputSize, MODEL_CONFIG.inputSize, 3]);
-            const output = this.model.predict(dummyInput);
-            if (output instanceof tf.Tensor) {
-                output.dispose();
-            } else if (Array.isArray(output)) {
-                output.forEach(t => t.dispose());
-            }
-            dummyInput.dispose();
-
+            console.log('[YOLO] Native on-device inference engine ready (GPU accelerated).');
             this.isInitialized = true;
-            console.log('✅ YOLO TFLite Service Initialized');
         } catch (error) {
-            console.error('❌ YOLO Initialization Error:', error);
+            console.error('[YOLO] Initialization failed:', error);
+            this.isInitialized = false;
         }
     }
 
     async predict(imageUri: string, cropFilter?: string) {
-        if (!this.isInitialized) {
-            await this.initialize();
-        }
-
-        if (!this.model) {
-            throw new Error('Model not loaded');
-        }
-
         try {
-            const inputTensor = await preprocessImage(imageUri);
+            if (!this.isInitialized) await this.initialize();
+            if (!this.model) return null;
 
-            // Run inference
-            const prediction = this.model.predict(inputTensor) as tf.Tensor;
-            const data = await prediction.data();
+            // 1. Prepare input Float32Array
+            const inputData = await preprocessImage(imageUri);
 
-            // Parse YOLOv8 output [1, 20, 3549]
-            // We need to find the box with the highest class confidence across all boxes
-            // Row 0-3: bbox, Row 4-19: classes
+            // 2. Run Inference natively
+            // model.run returns a TypedArray[] (outputs)
+            const outputs = await this.model.run([inputData]);
 
-            let maxConf = -1;
-            let bestClassIdx = -1;
-            const numBoxes = 3549;
-            const numClasses = 16;
-            const rowOffset = 4; // Classes start after 4 bbox coordinates
+            if (!outputs || outputs.length === 0) return null;
 
-            // Optimization: Find best prediction
-            for (let b = 0; b < numBoxes; b++) {
-                for (let c = 0; c < numClasses; c++) {
-                    const conf = data[numBoxes * (c + rowOffset) + b];
+            // 3. Post-process (Simplistic Argmax for single output models)
+            const output = outputs[0];
+            let maxProb = -1;
+            let classIdx = -1;
 
-                    // Filter by crop if specified
-                    if (cropFilter && CROP_LABELS[c] !== cropFilter) continue;
-
-                    if (conf > maxConf) {
-                        maxConf = conf;
-                        bestClassIdx = c;
-                    }
+            for (let i = 0; i < output.length; i++) {
+                if (output[i] > maxProb) {
+                    maxProb = output[i];
+                    classIdx = i;
                 }
             }
 
-            // Cleanup
-            inputTensor.dispose();
-            prediction.dispose();
+            // Apply threshold
+            if (maxProb < MODEL_CONFIG.confidenceThreshold) return null;
 
-            if (bestClassIdx === -1) {
+            // 4. Format Result
+            const { disease, crop } = formatPrediction(classIdx);
+
+            // Apply filter if provided
+            if (cropFilter && crop.toLowerCase() !== cropFilter.toLowerCase()) {
+                console.log(`[YOLO] Filter mismatch: detected ${crop}, filtered for ${cropFilter}`);
                 return null;
             }
 
             return {
-                disease_name: CLASS_NAMES[bestClassIdx],
-                confidence_score: maxConf,
-                crop: CROP_LABELS[bestClassIdx]
+                disease_name: disease,
+                confidence_score: maxProb,
+                is_healthy: disease.toLowerCase().includes('healthy'),
+                crop_type: crop
             };
         } catch (error) {
-            console.error('Inference Prediction Error:', error);
-            throw error;
+            console.error('[YOLO] Native Inference error:', error);
+            return null;
         }
     }
 }

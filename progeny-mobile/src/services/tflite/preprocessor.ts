@@ -1,10 +1,11 @@
 import * as tf from '@tensorflow/tfjs';
+import '@tensorflow/tfjs-react-native';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
 import { decode as b64decode } from 'base64-arraybuffer';
 import { MODEL_CONFIG } from './modelConfig';
 
-export const preprocessImage = async (imageUri: string): Promise<tf.Tensor4D> => {
+export const preprocessImage = async (imageUri: string): Promise<Float32Array> => {
     try {
         // 1. Resize image to model input size (416x416)
         const manipulatedImage = await ImageManipulator.manipulateAsync(
@@ -21,20 +22,29 @@ export const preprocessImage = async (imageUri: string): Promise<tf.Tensor4D> =>
         const arrayBuffer = b64decode(base64Data);
         const uint8Array = new Uint8Array(arrayBuffer);
 
-        // 3. Convert to tensor using tf.browser.fromPixels fallback for Node/Native
-        // In React Native, we often use decodeJpeg from @tensorflow/tfjs-react-native
-        // but since we want robust behavior, we'll use base64 -> Uint8Array -> Tensor
+        // 3. Convert to tensor using tfjs
+        // We still use tfjs for easy normalization and channel handling
+        // but we convert to Float32Array at the end for the native bridge
+        await tf.ready();
+
+        // This is a manual way to get pixels if tfjs-react-native's decodeJpeg is unavailable
         const imageTensor = tf.browser.fromPixels({
             data: uint8Array,
             width: MODEL_CONFIG.inputSize,
             height: MODEL_CONFIG.inputSize,
         });
 
-        // 4. Normalize to [0, 1] as per model analysis
+        // 4. Normalize to [0, 1]
         const normalized = imageTensor.toFloat().div(255.0);
 
-        // 5. Add batch dimension [1, 416, 416, 3]
-        return normalized.expandDims(0) as tf.Tensor4D;
+        // 5. Convert to Float32Array
+        const result = await normalized.data() as Float32Array;
+
+        // Cleanup
+        imageTensor.dispose();
+        normalized.dispose();
+
+        return result;
     } catch (error) {
         console.error('Preprocessing Error:', error);
         throw error;

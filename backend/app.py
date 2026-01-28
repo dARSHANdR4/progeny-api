@@ -171,9 +171,13 @@ def read_file_as_image(data) -> np.ndarray:
     # Resize to model input size
     image = image.resize((256, 256))
     
-    # Convert to array and normalize to [0, 1] range
+    # Convert to array
     image_array = np.array(image)
-    image_array = image_array.astype('float32') / 255.0
+    
+    # [FIX] No manual normalization here!
+    # The models have an internal Rescaling layer that handles / 255.0
+    # Keep as float32 for model compatibility
+    image_array = image_array.astype('float32')
     
     return image_array
 

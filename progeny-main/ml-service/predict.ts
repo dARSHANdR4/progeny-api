@@ -15,7 +15,8 @@ const MODEL_PATHS = {
 };
 
 // Image preprocessing configuration
-const IMAGE_SIZE = 224; // Adjust based on your model's input size
+// Image preprocessing configuration
+const IMAGE_SIZE = 256; // Adjust based on your model's input size
 
 /**
  * Load model from disk with caching
@@ -52,21 +53,26 @@ async function preprocessImage(imageBuffer: Buffer): Promise<tf.Tensor4D> {
       .raw()
       .toBuffer();
 
-    // Convert to tensor and normalize
+    // Convert to tensor
     const tensor = tf.tensor3d(
       new Uint8Array(processedImage),
       [IMAGE_SIZE, IMAGE_SIZE, 3]
     );
 
-    // Normalize pixel values to [0, 1]
-    const normalized = tensor.toFloat().div(tf.scalar(255));
+    // [FIX] No manual normalization here!
+    // The model has an internal Rescaling layer that handles /255.0
+    const floatTensor = tensor.toFloat();
 
     // Add batch dimension
-    const batched = normalized.expandDims(0) as tf.Tensor4D;
+    const batched = floatTensor.expandDims(0) as tf.Tensor4D;
+
+    // Log input range for debugging
+    const min = floatTensor.min().dataSync()[0];
+    const max = floatTensor.max().dataSync()[0];
+    console.log(`[ML] Preprocessing complete. Input range: [${min}, ${max}]. Expected [0, 255] for internal rescaling.`);
 
     // Cleanup intermediate tensors
     tensor.dispose();
-    normalized.dispose();
 
     return batched;
   } catch (error) {
