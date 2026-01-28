@@ -51,10 +51,12 @@ export default function DetectionScreen() {
     const [hasAttemptedAutoRefresh, setHasAttemptedAutoRefresh] = useState(false);
 
     // Initialize ONNX Inference on mount
+    // DISABLED FOR EXPO GO TESTING - Using Cloud ML Only
     useEffect(() => {
-        onnxInference.initialize().catch(err => {
-            console.error('ONNX Init Error:', err);
-        });
+        console.log('[TESTING] Running in Cloud ML-only mode (Expo Go compatible)');
+        // onnxInference.initialize().catch(err => {
+        //     console.error('ONNX Init Error:', err);
+        // });
     }, []);
 
     // Auto-refresh user data if it's missing (e.g., right after login)
@@ -126,52 +128,19 @@ export default function DetectionScreen() {
         setError(null);
 
         try {
-            // Try ONNX inference first
-            console.log('👀 Starting ONNX inference for crop:', selectedCrop);
-            const prediction = await onnxInference.predict(imageUri, selectedCrop.toLowerCase());
-
-            if (prediction) {
-                console.log(`✓ ONNX detection successful:`, prediction.disease_name);
-
-                // Fetch remedies
-                const remediesResponse = await scanApi.getRemedies(prediction.disease_name);
-
-                setScanResult({
-                    id: `onnx-${Date.now()}`,
-                    crop_type: prediction.crop_type || selectedCrop,
-                    disease_name: prediction.disease_name,
-                    confidence_score: prediction.confidence_score,
-                    remedies: remediesResponse.remedies,
-                    created_at: new Date().toISOString(),
-                    inference_source: 'onnx',
-                });
-
-                await refreshUserData(true);
-            } else {
-                // Fallback to Cloud ML
-                console.log('⚠️ ONNX found no disease, falling back to Cloud ML...');
-                const response = await scanApi.scan(imageUri, selectedCrop);
-                setScanResult({
-                    ...response.scan,
-                    inference_source: 'cloud',
-                });
-                await refreshUserData(true);
-            }
+            // CLOUD ML ONLY MODE FOR EXPO GO TESTING
+            console.log('☁️ Using Cloud ML inference (Expo Go mode)');
+            const response = await scanApi.scan(imageUri, selectedCrop);
+            setScanResult({
+                ...response.scan,
+                inference_source: 'cloud',
+            });
+            await refreshUserData(true);
         } catch (err: any) {
-            console.warn('❌ ONNX inference error, falling back to Cloud ML:', err);
-            try {
-                // Fallback to Cloud ML
-                const response = await scanApi.scan(imageUri, selectedCrop);
-                setScanResult({
-                    ...response.scan,
-                    inference_source: 'cloud',
-                });
-                await refreshUserData(true);
-            } catch (fallbackErr: any) {
-                setError(fallbackErr.message || t('something_went_wrong'));
-                if (fallbackErr.message?.includes('limit')) {
-                    Alert.alert(t('limit_reached'), fallbackErr.message);
-                }
+            console.error('❌ Cloud ML error:', err);
+            setError(err.message || t('something_went_wrong'));
+            if (err.message?.includes('limit')) {
+                Alert.alert(t('limit_reached'), err.message);
             }
         } finally {
             setIsScanning(false);

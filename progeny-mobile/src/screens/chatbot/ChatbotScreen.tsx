@@ -26,6 +26,8 @@ interface Message {
     text: string;
     sender: 'user' | 'bot';
     timestamp: Date;
+    originalText?: string;  // For TTS with correct pronunciation
+    ttsLanguage?: string;   // Language code for TTS
 }
 
 export default function ChatbotScreen() {
@@ -162,12 +164,14 @@ export default function ChatbotScreen() {
                 };
                 setMessages((prev) => [...prev, userMsg]);
 
-                // Add bot's response
+                // Add bot's response (with potential transliteration)
                 const botMsg: Message = {
                     id: (Date.now() + 1).toString(),
-                    text: data.response,
+                    text: data.response,  // Devanagari for display (if Urdu)
                     sender: 'bot',
                     timestamp: new Date(),
+                    originalText: data.response_original,  // Original for TTS
+                    ttsLanguage: data.tts_language,  // Language code for TTS
                 };
                 setMessages((prev) => [...prev, botMsg]);
             }
@@ -179,10 +183,14 @@ export default function ChatbotScreen() {
         }
     };
 
-    const handleListen = (text: string) => {
+    const handleListen = (message: Message) => {
         Speech.stop();
-        Speech.speak(text, {
-            language: language || 'en',
+        // Use original text for proper pronunciation, or fall back to display text
+        const textToSpeak = message.originalText || message.text;
+        const languageCode = message.ttsLanguage || language || 'en';
+
+        Speech.speak(textToSpeak, {
+            language: languageCode,
             rate: 0.9,
         });
     };
@@ -212,7 +220,7 @@ export default function ChatbotScreen() {
                     {isBot && (
                         <TouchableOpacity
                             style={[styles.listenBtn, { borderTopColor: colors.border }]}
-                            onPress={() => handleListen(item.text)}
+                            onPress={() => handleListen(item)}
                         >
                             {/* @ts-ignore */}
                             <Volume2 size={14} color={colors.primary} />

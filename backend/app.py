@@ -19,6 +19,8 @@ import io
 import tempfile
 from groq import Groq
 from dotenv import load_dotenv
+from indic_transliteration import sanscript
+from indic_transliteration.sanscript import transliterate
 
 load_dotenv()
 
@@ -44,6 +46,18 @@ if os.getenv("GROQ_API_KEY"):
     print("✓ Groq AI initialized")
 else:
     print("⚠️ WARNING: GROQ_API_KEY not found in environment")
+
+# Transliteration helper for Urdu → Devanagari
+def transliterate_urdu_to_devanagari(text: str) -> str:
+    """
+    Transliterate Urdu (Arabic script) to Devanagari script for broader accessibility.
+    Example: "پودوں" → "पौदों"
+    """
+    try:
+        return transliterate(text, sanscript.URDU, sanscript.DEVANAGARI)
+    except Exception as e:
+        print(f"⚠️ Transliteration error: {e}")
+        return text  # Return original if transliteration fails
 
 print(f"Looking for models in: {MODELS_DIR}")
 
@@ -381,9 +395,30 @@ Focus strictly on:
             
             bot_response = completion.choices[0].message.content
             
+            # Detect if response is in Urdu for transliteration
+            detected_language = transcription.language if hasattr(transcription, 'language') else language
+            
+            # For Urdu responses: provide both Devanagari (display) and original (TTS)
+            if detected_language == 'ur' or (detected_language and detected_language.startswith('ur')):
+                display_text = transliterate_urdu_to_devanagari(bot_response)
+                print(f"📝 Transliterated Urdu → Devanagari for accessibility")
+                
+                return jsonify({
+                    'user_text': user_text,
+                    'response': display_text,  # Devanagari for visual display
+                    'response_original': bot_response,  # Original Urdu for TTS
+                    'detected_language': 'ur',
+                    'tts_language': 'ur-PK',  # Pakistan Urdu for TTS
+                    'success': True
+                })
+            
+            # For other languages, same text for both display and TTS
             return jsonify({
                 'user_text': user_text,
                 'response': bot_response,
+                'response_original': bot_response,
+                'detected_language': detected_language or 'en',
+                'tts_language': detected_language or 'en-US',
                 'success': True
             })
             
