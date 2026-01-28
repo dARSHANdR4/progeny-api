@@ -18,7 +18,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { scanApi } from '../../services/api';
-import { yoloCascade } from '../../services/tflite/YOLOCascadeService';
+import { onnxInference } from '../../services/onnx/ONNXInferenceService';
 import CropSelector from '../../components/CropSelector';
 import ScanResultCard, { ScanResult } from '../../components/ScanResultCard';
 import SubscriptionModal from '../../components/SubscriptionModal';
@@ -50,10 +50,10 @@ export default function DetectionScreen() {
     const [showSubscription, setShowSubscription] = useState(false);
     const [hasAttemptedAutoRefresh, setHasAttemptedAutoRefresh] = useState(false);
 
-    // Initialize YOLO Cascade Service on mount
+    // Initialize ONNX Inference on mount
     useEffect(() => {
-        yoloCascade.initialize().catch(err => {
-            console.error('YOLO Cascade Init Error:', err);
+        onnxInference.initialize().catch(err => {
+            console.error('ONNX Init Error:', err);
         });
     }, []);
 
@@ -126,36 +126,52 @@ export default function DetectionScreen() {
         setError(null);
 
         try {
-            // Use the YOLO Cascade Service (TFLite → ONNX → Cloud ML)
-            console.log('👀 Starting YOLO cascade analysis for crop:', selectedCrop);
-            const prediction = await yoloCascade.predict(imageUri, selectedCrop.toLowerCase());
+            // Try ONNX inference first
+            console.log('👀 Starting ONNX inference for crop:', selectedCrop);
+            const prediction = await onnxInference.predict(imageUri, selectedCrop.toLowerCase());
 
             if (prediction) {
-                console.log(`✅ Detection successful via ${prediction.source.toUpperCase()}:`, prediction.disease_name);
+                console.log(`✓ ONNX detection successful:`, prediction.disease_name);
 
-                // Fetch remedies for the detected disease
+                // Fetch remedies
                 const remediesResponse = await scanApi.getRemedies(prediction.disease_name);
 
                 setScanResult({
-                    id: `${prediction.source}-${Date.now()}`,
+                    id: `onnx-${Date.now()}`,
                     crop_type: prediction.crop_type || selectedCrop,
                     disease_name: prediction.disease_name,
                     confidence_score: prediction.confidence_score,
                     remedies: remediesResponse.remedies,
                     created_at: new Date().toISOString(),
-                    inference_source: prediction.source, // Track which model was used
+                    inference_source: 'onnx',
                 });
 
-                // Sync usage with server
                 await refreshUserData(true);
             } else {
-                setError(t('no_disease_detected'));
+                // Fallback to Cloud ML
+                console.log('⚠️ ONNX found no disease, falling back to Cloud ML...');
+                const response = await scanApi.scan(imageUri, selectedCrop);
+                setScanResult({
+                    ...response.scan,
+                    inference_source: 'cloud',
+                });
+                await refreshUserData(true);
             }
         } catch (err: any) {
-            console.error('❌ All detection methods failed:', err);
-            setError(err.message || t('something_went_wrong'));
-            if (err.message?.includes('limit')) {
-                Alert.alert(t('limit_reached'), err.message);
+            console.warn('❌ ONNX inference error, falling back to Cloud ML:', err);
+            try {
+                // Fallback to Cloud ML
+                const response = await scanApi.scan(imageUri, selectedCrop);
+                setScanResult({
+                    ...response.scan,
+                    inference_source: 'cloud',
+                });
+                await refreshUserData(true);
+            } catch (fallbackErr: any) {
+                setError(fallbackErr.message || t('something_went_wrong'));
+                if (fallbackErr.message?.includes('limit')) {
+                    Alert.alert(t('limit_reached'), fallbackErr.message);
+                }
             }
         } finally {
             setIsScanning(false);
