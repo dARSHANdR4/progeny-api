@@ -18,13 +18,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { scanApi } from '../../services/api';
-import { onnxInference } from '../../services/onnx/ONNXInferenceService';
+import { tfliteInference } from '../../services/tflite/TFLiteInferenceService';
 import CropSelector from '../../components/CropSelector';
 import ScanResultCard, { ScanResult } from '../../components/ScanResultCard';
 import SubscriptionModal from '../../components/SubscriptionModal';
 import { COLORS, SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
 
-export default function DetectionScreen() {
+export default function DetectionScreen({ navigation }: any) {
     const { colors, isDark, isHighContrast, scaledTypography, getScaledFontSize } = useTheme();
     const { t } = useLanguage();
     const {
@@ -50,13 +50,12 @@ export default function DetectionScreen() {
     const [showSubscription, setShowSubscription] = useState(false);
     const [hasAttemptedAutoRefresh, setHasAttemptedAutoRefresh] = useState(false);
 
-    // Initialize ONNX Inference on mount
-    // DISABLED FOR EXPO GO TESTING - Using Cloud ML Only
+    // Initialize TFLite Inference on mount
     useEffect(() => {
-        console.log('[TESTING] Running in Cloud ML-only mode (Expo Go compatible)');
-        // onnxInference.initialize().catch(err => {
-        //     console.error('ONNX Init Error:', err);
-        // });
+        console.log('🚀 [Option B] Initializing TFLite...');
+        tfliteInference.initialize().catch(err => {
+            console.error('⚠️ TFLite Init Error (will fall back to Cloud ML):', err);
+        });
     }, []);
 
     // Auto-refresh user data if it's missing (e.g., right after login)
@@ -128,19 +127,40 @@ export default function DetectionScreen() {
         setError(null);
 
         try {
-            // CLOUD ML ONLY MODE FOR EXPO GO TESTING
-            console.log('☁️ Using Cloud ML inference (Expo Go mode)');
-            const response = await scanApi.scan(imageUri, selectedCrop);
-            setScanResult({
-                ...response.scan,
-                inference_source: 'cloud',
-            });
-            await refreshUserData(true);
-        } catch (err: any) {
-            console.error('❌ Cloud ML error:', err);
-            setError(err.message || t('something_went_wrong'));
-            if (err.message?.includes('limit')) {
-                Alert.alert(t('limit_reached'), err.message);
+            // Try TFLite on-device inference first (fast, offline-capable)
+            console.log('🔬 [Option B] Attempting TFLite on-device inference...');
+            const tfliteResult = await tfliteInference.predict(imageUri, selectedCrop);
+
+            if (tfliteResult && tfliteResult.confidence_score > 0.5) {
+                console.log('✅ TFLite inference successful:', tfliteResult);
+                // Use TFLite result, but still call backend to update scan count
+                const response = await scanApi.scan(imageUri, selectedCrop);
+                setScanResult({
+                    ...response.scan,
+                    disease_name: tfliteResult.disease_name || response.scan.disease_name,
+                    confidence: tfliteResult.confidence_score,
+                    inference_source: 'tflite',
+                });
+                await refreshUserData(true);
+            } else {
+                throw new Error('TFLite confidence too low, falling back to Cloud ML');
+            }
+        } catch (tfliteError: any) {
+            // Fallback to Cloud ML for better accuracy/diagnosis
+            console.log('☁️ Falling back to Cloud ML:', tfliteError.message);
+            try {
+                const response = await scanApi.scan(imageUri, selectedCrop);
+                setScanResult({
+                    ...response.scan,
+                    inference_source: 'cloud',
+                });
+                await refreshUserData(true);
+            } catch (err: any) {
+                console.error('❌ Cloud ML error:', err);
+                setError(err.message || t('something_went_wrong'));
+                if (err.message?.includes('limit')) {
+                    Alert.alert(t('limit_reached'), err.message);
+                }
             }
         } finally {
             setIsScanning(false);
@@ -259,6 +279,20 @@ export default function DetectionScreen() {
                     onCropSelect={handleCropSelect}
                     disabled={isScanning}
                 />
+
+                {/* Live Camera Button */}
+                {selectedCrop && (
+                    <TouchableOpacity
+                        style={[styles.liveCameraButton, { backgroundColor: colors.primary }]}
+                        onPress={() => navigation.navigate('RealtimeDetection')}
+                    >
+                        {/* @ts-ignore */}
+                        <Camera size={20} color="#FFFFFF" />
+                        <Text style={styles.liveCameraText}>
+                            📹 {t('live_camera') || 'Live Camera Detection'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
 
                 {/* Image Upload Section */}
                 {selectedCrop && (
@@ -572,5 +606,20 @@ const styles = StyleSheet.create({
     },
     signOutText: {
         fontWeight: '500',
+    },
+    liveCameraButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: SPACING.md,
+        borderRadius: 12,
+        gap: SPACING.sm,
+        marginBottom: SPACING.md,
+        ...SHADOWS.small,
+    },
+    liveCameraText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

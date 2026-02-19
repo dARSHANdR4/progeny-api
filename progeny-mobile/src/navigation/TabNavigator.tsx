@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // Screens
-import DetectionScreen from '../screens/detection/DetectionScreen';
+import DetectionStackNavigator from './DetectionStackNavigator';
 import HistoryScreen from '../screens/history/HistoryScreen';
 import CommunityScreen from '../screens/community/CommunityScreen';
 import ChatbotScreen from '../screens/chatbot/ChatbotScreen';
@@ -44,7 +44,7 @@ const TabNavigator = () => {
         >
             <Tab.Screen
                 name="Detection"
-                component={DetectionScreen}
+                component={DetectionStackNavigator}
                 options={{
                     tabBarLabel: t('detection'),
                     tabBarIcon: ({ color, size }: { color: string; size: number }) => (
