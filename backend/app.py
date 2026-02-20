@@ -19,6 +19,8 @@ import io
 import tempfile
 from groq import Groq
 from dotenv import load_dotenv
+from indic_transliteration import sanscript
+from indic_transliteration.sanscript import transliterate
 
 load_dotenv()
 
@@ -45,34 +47,14 @@ if os.getenv("GROQ_API_KEY"):
 else:
     print("⚠️ WARNING: GROQ_API_KEY not found in environment")
 
-# Custom Urdu → Devanagari transliteration (pure Python, no external libs)
-# Character-to-character mapping for common Urdu letters
-URDU_TO_DEVANAGARI_MAP = {
-    # Vowels
-    'ا': 'आ', 'آ': 'आ', 'ع': 'अ', 'و': 'ओ', 'ی': 'ई', 'ے': 'ए',
-    # Consonants
-    'ب': 'ब', 'پ': 'प', 'ت': 'त', 'ٹ': 'ट', 'ث': 'स', 'ج': 'ज',
-    'چ': 'च', 'ح': 'ह', 'خ': 'ख', 'د': 'द', 'ڈ': 'ड', 'ذ': 'ज़',
-    'ر': 'र', 'ڑ': 'ड़', 'ز': 'ज़', 'ژ': 'ज़', 'س': 'स', 'ش': 'श',
-    'ص': 'स', 'ض': 'ज़', 'ط': 'त', 'ظ': 'ज़', 'غ': 'ग़', 'ف': 'फ़',
-    'ق': 'क़', 'ک': 'क', 'گ': 'ग', 'ل': 'ल', 'م': 'म', 'ن': 'न',
-    'ں': 'ं', 'ہ': 'ह', 'ھ': 'ह', 'ء': '',
-    # Diacritics & common combinations
-    'َ': '', 'ِ': '', 'ُ': '', 'ً': '', 'ٍ': '', 'ٌ': '', 'ّ': '',
-    '؟': '?', '،': ',', ' ': ' ',
-}
-
+# Transliteration helper for Urdu → Devanagari
 def transliterate_urdu_to_devanagari(text: str) -> str:
     """
-    Transliterate Urdu (Arabic script) to Devanagari using character mapping.
+    Transliterate Urdu (Arabic script) to Devanagari script for broader accessibility.
     Example: "پودوں" → "पौदों"
     """
     try:
-        result = []
-        for char in text:
-            # Use mapping if available, otherwise keep original character
-            result.append(URDU_TO_DEVANAGARI_MAP.get(char, char))
-        return ''.join(result)
+        return transliterate(text, sanscript.URDU, sanscript.DEVANAGARI)
     except Exception as e:
         print(f"⚠️ Transliteration error: {e}")
         return text  # Return original if transliteration fails
