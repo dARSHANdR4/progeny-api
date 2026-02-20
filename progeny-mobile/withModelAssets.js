@@ -19,23 +19,39 @@ const withModelAssets = (config) => {
             // Define files to copy
             const filesToCopy = [
                 { src: 'best_float16.tflite', dest: 'best_float16.tflite' },
+                { src: 'float32.tflite', dest: 'float32.tflite' },
                 { src: 'labels.txt', dest: 'labels.txt' }
             ];
 
             filesToCopy.forEach(file => {
-                const sourcePath = path.join(projectRoot, 'assets', 'models', file.src);
+                // Try multiple potential source locations for better monorepo support on EAS
+                const potentialSources = [
+                    path.join(projectRoot, 'assets', 'models', file.src),
+                    path.join(projectRoot, 'progeny-mobile', 'assets', 'models', file.src),
+                    path.join(process.cwd(), 'assets', 'models', file.src)
+                ];
+
+                let sourcePath = null;
+                for (const p of potentialSources) {
+                    if (fs.existsSync(p)) {
+                        sourcePath = p;
+                        break;
+                    }
+                }
+
                 const destPath = path.join(assetsDir, file.dest);
 
-                if (fs.existsSync(sourcePath)) {
+                if (sourcePath) {
                     // Copy file
                     fs.copyFileSync(sourcePath, destPath);
-                    console.log(`[ConfigPlugin] ✅ Copied ${file.src} to Android assets`);
+                    console.log(`[ConfigPlugin] ✅ Copied ${file.src} from ${sourcePath} to Android assets`);
                 } else {
-                    console.warn(`[ConfigPlugin] ⚠️ Source file not found: ${sourcePath}`);
+                    console.error(`[ConfigPlugin] ❌ Source file not found in any of these locations:`);
+                    potentialSources.forEach(p => console.error(`  - ${p}`));
 
                     // Fail build if model is missing (critical)
                     if (file.src.endsWith('.tflite')) {
-                        throw new Error(`Critical asset missing: ${sourcePath}`);
+                        throw new Error(`Critical asset missing: best_float16.tflite. Ensure it is placed in /assets/models/ and NOT ignored by git.`);
                     }
                 }
             });

@@ -121,34 +121,33 @@ export default function RealtimeDetectionScreen({ navigation }: any) {
         // (Cropping individual regions requires image manipulation library)
 
         try {
-            console.log('[SlidingWindow] Starting inference...');
+            console.log('[LiveDetection] Starting YOLO inference...');
             const result = await tfliteInference.predict(imageUri, selectedCrop || undefined);
 
-            console.log('[SlidingWindow] Result:', JSON.stringify(result));
+            if (result && result.boxes && result.boxes.length > 0) {
+                console.log(`[LiveDetection] Found ${result.boxes.length} detections`);
 
-            // Show ALL detections for debugging (healthy or unhealthy)
-            if (result && result.confidence_score > 0.3) {
-                console.log(`[SlidingWindow] Creating box: ${result.disease_name} (${(result.confidence_score * 100).toFixed(1)}%)`);
-
-                // Create a bounding box at center region
-                boxes.push({
-                    x: regionWidth,
-                    y: regionHeight,
-                    width: regionWidth,
-                    height: regionHeight,
-                    label: result.disease_name,
-                    confidence: result.confidence_score,
+                result.boxes.forEach(box => {
+                    // YOLO coordinates from library are usually normalized [0, 1]
+                    // Scale them to the actual camera view dimensions
+                    boxes.push({
+                        x: box.x * SCREEN_WIDTH,
+                        y: box.y * (SCREEN_HEIGHT * 0.7), // Scale to camera height
+                        width: box.width * SCREEN_WIDTH,
+                        height: box.height * (SCREEN_HEIGHT * 0.7),
+                        label: box.label,
+                        confidence: box.confidence,
+                    });
                 });
 
-                console.log(`[SlidingWindow] ✅ Box created! Total boxes: ${boxes.length}`);
+                console.log(`[LiveDetection] ✅ ${boxes.length} boxes scaled and added`);
             } else {
-                console.log('[SlidingWindow] ⚠️ No confident detection (threshold: 0.3)');
+                console.log('[LiveDetection] ⚠️ No detections returned from model');
             }
         } catch (error) {
-            console.error('[SlidingWindow] Inference error:', error);
+            console.error('[LiveDetection] Inference error:', error);
         }
 
-        console.log(`[SlidingWindow] Returning ${boxes.length} boxes`);
         return boxes;
     };
 

@@ -1,10 +1,21 @@
 import Tflite from 'react-native-tflite';
+import { MODEL_CONFIG } from './modelConfig';
+
+export interface BoundingBox {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    label: string;
+    confidence: number;
+}
 
 interface DetectionResult {
     disease_name: string;
     confidence_score: number;
     is_healthy: boolean;
     crop_type: string;
+    boxes: BoundingBox[];
 }
 
 class TFLiteInferenceService {
@@ -12,16 +23,16 @@ class TFLiteInferenceService {
 
     async initialize() {
         try {
-            console.log('[TFLite] Initializing...');
+            console.log('[TFLite] Initializing with YOLO model...');
 
             await Tflite.loadModel({
-                model: 'best_float16.tflite',
+                model: 'float32.tflite',
                 labels: 'labels.txt',
                 numThreads: 4,
-                useGpuDelegate: false // Start without GPU for stability
+                useGpuDelegate: false
             });
 
-            console.log('[TFLite] ✅ Model loaded successfully');
+            console.log('[TFLite] ✅ YOLO Model loaded successfully');
             this.isInitialized = true;
         } catch (error) {
             console.error('[TFLite] Init failed:', error);
@@ -36,42 +47,44 @@ class TFLiteInferenceService {
         }
 
         try {
-            console.log('[TFLite] 🔍 Running inference on:', imageUri);
-            console.log('[TFLite] Crop filter:', cropFilter);
+            console.log('[TFLite] 🔍 Running YOLO inference on:', imageUri);
 
-            const result = await Tflite.runModelOnImage({
+            const result = await Tflite.runModelOnYolo({
                 path: imageUri,
                 imageMean: 0.0,
                 imageStd: 255.0,
-                numResults: 5,
-                threshold: 0.1  // LOWERED from 0.5 to get ANY results
+                threshold: MODEL_CONFIG.confidenceThreshold,
+                numResultsPerClass: 1,
             });
 
-            console.log('[TFLite] Raw result:', JSON.stringify(result));
+            console.log('[TFLite] Raw detection count:', result?.length || 0);
 
             if (!result || result.length === 0) {
-                console.warn('[TFLite] ⚠️ No results returned (threshold: 0.1)');
                 return null;
             }
 
-            const best = result[0];
-            const diseaseName = best.label as string;
-            const confidence = best.confidence as number;
+            // Map TFLiteYoloResult to BoundingBox
+            const boxes: BoundingBox[] = result.map(res => ({
+                x: res.rect.x,
+                y: res.rect.y,
+                width: res.rect.w,
+                height: res.rect.h,
+                label: res.detectedClass,
+                confidence: res.confidenceInClass
+            }));
 
-            console.log(`[TFLite] ✅ DETECTION FOUND!`);
-            console.log(`[TFLite]    Label: ${diseaseName}`);
-            console.log(`[TFLite]    Confidence: ${(confidence * 100).toFixed(1)}%`);
-            console.log(`[TFLite]    All results count: ${result.length}`);
+            // Find best detection for the header summary
+            const best = boxes.sort((a, b) => b.confidence - a.confidence)[0];
 
             return {
-                disease_name: diseaseName,
-                confidence_score: confidence,
-                is_healthy: diseaseName.toLowerCase().includes('healthy'),
-                crop_type: cropFilter || 'unknown'
+                disease_name: best.label,
+                confidence_score: best.confidence,
+                is_healthy: best.label.toLowerCase().includes('healthy'),
+                crop_type: cropFilter || 'unknown',
+                boxes: boxes
             };
         } catch (error) {
             console.error('[TFLite] ❌ Inference error:', error);
-            console.error('[TFLite] Error details:', JSON.stringify(error));
             return null;
         }
     }
