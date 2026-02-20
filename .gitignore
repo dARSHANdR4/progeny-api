@@ -8,11 +8,11 @@
 *.pt
 *.pth
 *.onnx
-*.tflite
+# *.tflite (NOT ignored to allow mobile assets)
 *.savedmodel
 
 # Models
-**/models/
+# **/models/ (NOT ignored to allow mobile assets)
 **/saved_models/
 
 # Node
