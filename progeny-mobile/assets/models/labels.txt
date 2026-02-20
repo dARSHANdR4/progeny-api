@@ -1,0 +1,16 @@
+Apple Scab
+Apple Black Rot
+Apple Cedar Rust
+Apple Healthy
+Corn Blight
+Corn Common Rust
+Corn Healthy
+Potato Early Blight
+Potato Late Blight
+Potato Healthy
+Tomato Bacterial Spot
+Tomato Early Blight
+Tomato Late Blight
+Tomato Leaf Mold
+Tomato Target Spot
+Tomato Healthy

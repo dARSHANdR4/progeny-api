@@ -38,12 +38,16 @@
           }
         }
       ],
-      "expo-router"
+      "expo-router",
+      "./withModelAssets.js"
     ],
     "owner": "daytona69",
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "extra": {
       "eas": {
         "projectId": "97aaa623-9d3a-4764-a7c4-1a63400c0be1"

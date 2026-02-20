@@ -6,7 +6,7 @@ declare module 'react-native-tflite' {
         useGpuDelegate?: boolean;
     }
 
-    export interface TfliteImageOptions {
+    export interface TfliteRunOptions {
         path: string;
         imageMean?: number;
         imageStd?: number;
@@ -17,10 +17,12 @@ declare module 'react-native-tflite' {
     export interface TfliteResult {
         label: string;
         confidence: number;
+        index: number;
     }
 
     export default class Tflite {
-        static loadModel(options: TfliteModelOptions): Promise<void>;
-        static runModelOnImage(options: TfliteImageOptions): Promise<TfliteResult[]>;
+        static loadModel(options: TfliteModelOptions): Promise<string>;
+        static runModelOnImage(options: TfliteRunOptions): Promise<TfliteResult[]>;
+        static close(): void;
     }
 }

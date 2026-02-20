@@ -30,7 +30,7 @@ interface BoundingBox {
     confidence: number;
 }
 
-export default function RealtimeDetectionScreen() {
+export default function RealtimeDetectionScreen({ navigation }: any) {
     const { colors, isDark } = useTheme();
     const { t } = useLanguage();
     const [permission, requestPermission] = useCameraPermissions();
@@ -43,8 +43,8 @@ export default function RealtimeDetectionScreen() {
     const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
     useEffect(() => {
-        // Initialize TFLite (float32.tflite model)
-        tfliteInference.initialize().catch((err: Error) => {
+        // Initialize TFLite
+        tfliteInference.initialize().catch(err => {
             console.error('[RealtimeDetection] TFLite init error:', err);
         });
 
