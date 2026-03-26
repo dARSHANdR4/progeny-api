@@ -1,6 +1,6 @@
 export const MODEL_CONFIG = {
     inputSize: 416,
-    numClasses: 16,
+    numClasses: 20,
     normalize: true,
     confidenceThreshold: 0.45,
     iouThreshold: 0.45,
@@ -11,7 +11,7 @@ export const CLASS_NAMES = [
     'Black Rot',
     'Cedar Apple Rust',
     'Healthy',
-    'Corn Blight',
+    'Blight',
     'Common Rust',
     'Healthy',
     'Early Blight',
@@ -22,6 +22,10 @@ export const CLASS_NAMES = [
     'Late Blight',
     'Leaf Mold',
     'Target Spot',
+    'Healthy',
+    'Bacterial Blight',
+    'Curl Virus',
+    'Fussarium Wilt',
     'Healthy'
 ];
 
@@ -30,6 +34,7 @@ export const CROP_LABELS = [
     ...Array(3).fill('corn'),
     ...Array(3).fill('potato'),
     ...Array(6).fill('tomato'),
+    ...Array(4).fill('cotton'),
 ];
 
 export const formatPrediction = (classIdx: number) => {

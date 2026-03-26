@@ -36,7 +36,7 @@ def home():
     return jsonify({
         'status': 'online',
         'service': 'Progeny ML Service',
-        'endpoints': ['/predict', '/api/chat/voice']
+        'endpoints': ['/predict', '/detect-leaf', '/remedies', '/api/chat/voice']
     })
 
 # Initialize Groq client
@@ -63,14 +63,28 @@ print(f"Looking for models in: {MODELS_DIR}")
 
 # Load models at startup with class mappings
 MODELS = {}
-crop_types = ['apple', 'corn', 'potato', 'tomato']
+crop_types = ['apple', 'corn', 'potato', 'tomato', 'cotton']
 
 CLASS_MAPPINGS = {
     'apple': ['Apple Scab', 'Black Rot', 'Cedar Apple Rust', 'Healthy'],
     'potato': ['Early Blight', 'Late Blight', 'Healthy'],
     'corn': ['Blight', 'Common Rust', 'Healthy'],
-    'tomato': ['Bacterial Spot', 'Early Blight', 'Late Blight', 'Leaf Mold', 'Target Spot', 'Healthy']
+    'tomato': ['Bacterial Spot', 'Early Blight', 'Late Blight', 'Leaf Mold', 'Target Spot', 'Healthy'],
+    'cotton': ['Bacterial Blight', 'Curl Virus', 'Fussarium Wilt', 'Healthy']
 }
+
+# ===== LEAF / NON-LEAF DETECTOR =====
+LEAF_DETECTOR = None
+LEAF_CLASSES = ['Leaf', 'Non_Leaf']
+try:
+    leaf_model_path = os.path.join(MODELS_DIR, 'leaf_detector.h5')
+    if os.path.exists(leaf_model_path):
+        LEAF_DETECTOR = tf.keras.models.load_model(leaf_model_path)
+        print(f'✓ Loaded leaf detector from {leaf_model_path}')
+    else:
+        print(f'⚠️ Leaf detector model not found at {leaf_model_path}')
+except Exception as e:
+    print(f'✗ Error loading leaf detector: {e}')
 
 for crop in crop_types:
     try:
@@ -170,6 +184,28 @@ DISEASE_REMEDIES = {
         'Remove all infected lower leaves and crop debris to reduce spore load',
         'Improve air circulation through wider plant spacing (24-30 inches) and staking',
         'Mulch with black plastic to prevent soil splash and practice 2-3 year crop rotation'
+    ],
+    
+    # ===== COTTON DISEASES =====
+    'Bacterial Blight': [
+        'Use disease-free, acid-delinted seeds treated with Streptocycline (100 ppm) before sowing',
+        'Spray copper oxychloride (Blitox 50 WP at 3g/L) at first sign of angular leaf spots',
+        'Remove and destroy all infected plant debris after harvest to break the disease cycle',
+        'Practice 2-3 year crop rotation with non-host crops like cereals or legumes'
+    ],
+    
+    'Curl Virus': [
+        'Control whitefly vector populations using Imidacloprid (0.3 mL/L) or Thiamethoxam sprays',
+        'Install yellow sticky traps (15-20 per acre) to monitor and reduce whitefly populations',
+        'Remove and destroy infected plants immediately to prevent virus spread to healthy plants',
+        'Use resistant or tolerant cotton varieties and avoid planting near previously infected fields'
+    ],
+    
+    'Fussarium Wilt': [
+        'Treat seeds with Carbendazim (2g/kg seed) or Trichoderma viride (4g/kg) before sowing',
+        'Apply Trichoderma harzianum-enriched farmyard manure to soil before planting',
+        'Practice long crop rotation (4-5 years) with non-susceptible crops like wheat or sorghum',
+        'Ensure proper field drainage as waterlogged conditions favor Fusarium development'
     ]
 }
 
@@ -277,6 +313,52 @@ def predict():
         import traceback
         traceback.print_exc()
         print(f"{'='*60}\n")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/detect-leaf', methods=['POST'])
+def detect_leaf():
+    """Pre-filter: detect if image contains a leaf or not"""
+    try:
+        if LEAF_DETECTOR is None:
+            return jsonify({'error': 'Leaf detector model not loaded'}), 500
+        
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image provided'}), 400
+        
+        # Read and preprocess image
+        image_file = request.files['image']
+        image = read_file_as_image(image_file.read())
+        img_batch = np.expand_dims(image, 0)
+        
+        print(f"\n{'='*60}")
+        print(f"🍃 LEAF DETECTION RUNNING")
+        print(f"{'='*60}")
+        
+        # Run prediction
+        predictions = LEAF_DETECTOR.predict(img_batch, verbose=0)
+        predicted_idx = np.argmax(predictions[0])
+        confidence = float(np.max(predictions[0]))
+        predicted_class = LEAF_CLASSES[predicted_idx]
+        is_leaf = predicted_class == 'Leaf'
+        
+        print(f"   Leaf: {predictions[0][0]:.4f}")
+        print(f"   Non_Leaf: {predictions[0][1]:.4f}")
+        print(f"   Result: {'🍃 LEAF' if is_leaf else '❌ NOT A LEAF'} ({confidence*100:.1f}%)")
+        print(f"{'='*60}\n")
+        
+        return jsonify({
+            'is_leaf': is_leaf,
+            'confidence': confidence,
+            'predicted_class': predicted_class,
+            'all_scores': {
+                'leaf': float(predictions[0][0]),
+                'non_leaf': float(predictions[0][1])
+            }
+        })
+    except Exception as e:
+        print(f'\n❌ LEAF DETECTION ERROR: {e}')
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/remedies', methods=['POST'])

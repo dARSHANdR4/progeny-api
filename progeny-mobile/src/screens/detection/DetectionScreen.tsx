@@ -44,6 +44,7 @@ export default function DetectionScreen({ navigation }: any) {
     const [selectedCrop, setSelectedCrop] = useState<string | null>(null);
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState(false);
+    const [isValidatingLeaf, setIsValidatingLeaf] = useState(false);
     const [scanResult, setScanResult] = useState<ScanResult | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
@@ -127,7 +128,31 @@ export default function DetectionScreen({ navigation }: any) {
         setError(null);
 
         try {
-            // Try TFLite on-device inference first (fast, offline-capable)
+            // Step 1: Leaf/No-Leaf Pre-validation
+            console.log('🍃 [Pre-filter] Validating if image is a leaf...');
+            setIsValidatingLeaf(true);
+            try {
+                const leafResult = await scanApi.detectLeaf(imageUri);
+                setIsValidatingLeaf(false);
+
+                if (!leafResult.is_leaf) {
+                    console.log('❌ Not a leaf! Confidence:', leafResult.confidence);
+                    Alert.alert(
+                        t('not_a_leaf_title') || 'Not a Leaf',
+                        t('not_a_leaf_message') || 'The image does not appear to be a plant leaf. Please upload a clear leaf image for accurate disease detection.',
+                        [{ text: t('ok') || 'OK' }]
+                    );
+                    setIsScanning(false);
+                    return;
+                }
+                console.log('🍃 Leaf confirmed! Confidence:', leafResult.confidence);
+            } catch (leafError: any) {
+                setIsValidatingLeaf(false);
+                console.warn('⚠️ Leaf validation failed, proceeding with scan:', leafError.message);
+                // Don't block scan if leaf detection fails — proceed with disease detection
+            }
+
+            // Step 2: Try TFLite on-device inference first (fast, offline-capable)
             console.log('🔬 [Option B] Attempting TFLite on-device inference...');
             const tfliteResult = await tfliteInference.predict(imageUri, selectedCrop);
 
@@ -164,6 +189,7 @@ export default function DetectionScreen({ navigation }: any) {
             }
         } finally {
             setIsScanning(false);
+            setIsValidatingLeaf(false);
         }
     };
 
@@ -280,19 +306,7 @@ export default function DetectionScreen({ navigation }: any) {
                     disabled={isScanning}
                 />
 
-                {/* Live Camera Button */}
-                {selectedCrop && (
-                    <TouchableOpacity
-                        style={[styles.liveCameraButton, { backgroundColor: colors.primary }]}
-                        onPress={() => navigation.navigate('RealtimeDetection')}
-                    >
-                        {/* @ts-ignore */}
-                        <Camera size={20} color="#FFFFFF" />
-                        <Text style={styles.liveCameraText}>
-                            📹 {t('live_camera') || 'Live Camera Detection'}
-                        </Text>
-                    </TouchableOpacity>
-                )}
+
 
                 {/* Image Upload Section */}
                 {selectedCrop && (
@@ -360,7 +374,9 @@ export default function DetectionScreen({ navigation }: any) {
                                     {isScanning ? (
                                         <>
                                             <ActivityIndicator color={isHighContrast ? '#000' : '#fff'} size="small" />
-                                            <Text style={[styles.scanButtonText, { color: isHighContrast ? '#000' : '#fff' }]}>{t('analyzing')}</Text>
+                                            <Text style={[styles.scanButtonText, { color: isHighContrast ? '#000' : '#fff' }]}>
+                                                {isValidatingLeaf ? (t('validating_image') || 'Validating image...') : t('analyzing')}
+                                            </Text>
                                         </>
                                     ) : (
                                         <>

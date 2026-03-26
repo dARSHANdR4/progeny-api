@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Apple, Wheat, Bean, Leaf } from 'lucide-react-native';
+import { Apple, Wheat, Bean, Leaf, Flower2 } from 'lucide-react-native';
 import { SPACING, TYPOGRAPHY, SHADOWS } from '../styles/theme';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -18,6 +18,7 @@ export const CROP_TYPES: CropType[] = [
     { value: 'corn', label: 'Corn', color: '#CA8A04', bgColor: '#FEF3C7', darkBgColor: '#422006' },
     { value: 'potato', label: 'Potato', color: '#D97706', bgColor: '#FEF3C7', darkBgColor: '#451a03' },
     { value: 'tomato', label: 'Tomato', color: '#16A34A', bgColor: '#DCFCE7', darkBgColor: '#052e16' },
+    { value: 'cotton', label: 'Cotton', color: '#8B5CF6', bgColor: '#EDE9FE', darkBgColor: '#1e1b4b' },
 ];
 
 interface CropSelectorProps {
@@ -40,6 +41,9 @@ const CropIcon = ({ crop, size, color }: { crop: string; size: number; color: st
         case 'tomato':
             // @ts-ignore
             return <Leaf size={size} color={color} />;
+        case 'cotton':
+            // @ts-ignore
+            return <Flower2 size={size} color={color} />;
         default:
             // @ts-ignore
             return <Leaf size={size} color={color} />;

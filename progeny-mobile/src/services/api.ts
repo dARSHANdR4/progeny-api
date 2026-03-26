@@ -129,6 +129,37 @@ export const scanApi = {
     },
 
     /**
+     * Pre-filter: detect if image contains a leaf or not
+     */
+    detectLeaf: async (imageUri: string): Promise<{ is_leaf: boolean; confidence: number }> => {
+        // ML backend URL (HuggingFace Spaces)
+        const ML_BACKEND_URL = process.env.EXPO_PUBLIC_ML_URL || 'https://darshandr4-progeny-backend.hf.space';
+
+        const formData = new FormData();
+        const filename = imageUri.split('/').pop() || 'image.jpg';
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+        formData.append('image', {
+            uri: imageUri,
+            name: filename,
+            type,
+        } as any);
+
+        const response = await fetch(`${ML_BACKEND_URL}/detect-leaf`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Leaf detection failed' }));
+            throw new Error(error.error || `HTTP ${response.status}`);
+        }
+
+        return response.json();
+    },
+
+    /**
      * Get remedies for a disease (for on-device YOLO inference)
      */
     async getRemedies(diseaseName: string) {

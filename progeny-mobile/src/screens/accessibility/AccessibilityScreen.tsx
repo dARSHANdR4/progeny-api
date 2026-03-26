@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator, Linking, Share, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Accessibility, Globe, Eye, Crown, ExternalLink, LogOut, Trash2, Github, Link2, Type, Download, Info, Phone, Mail, X, Users } from 'lucide-react-native';
+import { Accessibility, Globe, Eye, Crown, ExternalLink, LogOut, Trash2, Github, Link2, Type, Download, Info, Phone, Mail, X, Users, Camera, Zap } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
 import { SPACING, TYPOGRAPHY, SHADOWS } from '../../styles/theme';
 import { useAuth } from '../../contexts/AuthContext';
@@ -390,6 +390,37 @@ export default function AccessibilityScreen() {
                     </TouchableOpacity>
                 </View>
 
+                {/* Future Enhancements Section */}
+                <View style={[styles.section, dynamicStyles.section]}>
+                    <View style={styles.sectionHeader}>
+                        {/* @ts-ignore */}
+                        <Zap size={20} color={colors.primary} />
+                        <Text style={[styles.sectionTitle, dynamicStyles.sectionTitle]}>{t('future_enhancements') || 'Future Enhancements'}</Text>
+                    </View>
+
+                    <View style={[styles.futureCard, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                        <View style={[styles.futureIconContainer, { backgroundColor: colors.primary + '15' }]}>
+                            {/* @ts-ignore */}
+                            <Camera size={28} color={colors.primary} />
+                        </View>
+                        <View style={styles.futureContent}>
+                            <View style={styles.futureHeader}>
+                                <Text style={[styles.futureTitle, { color: colors.textPrimary }, scaledTypography.body]}>
+                                    {t('live_detection_title') || '📹 Live Camera Detection'}
+                                </Text>
+                                <View style={[styles.comingSoonBadge, { backgroundColor: colors.primary + '20' }]}>
+                                    <Text style={[styles.comingSoonText, { color: colors.primary }]}>
+                                        {t('coming_soon') || 'Coming Soon'}
+                                    </Text>
+                                </View>
+                            </View>
+                            <Text style={[styles.futureDesc, { color: colors.textSecondary }, scaledTypography.caption]}>
+                                {t('live_detection_coming_soon') || 'Real-time plant disease detection using your camera with on-device AI. Point your camera at any plant leaf and get instant results.'}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+
                 {/* Sign Out Section */}
 
                 <TouchableOpacity style={[styles.signOutBtn, { backgroundColor: colors.surface, borderColor: colors.error }]} onPress={handleSignOut}>
@@ -676,5 +707,48 @@ const styles = StyleSheet.create({
     nameItem: { padding: SPACING.md, borderRadius: 12, borderLeftWidth: 4, borderLeftColor: '#22C55E' },
     nameTitle: { ...TYPOGRAPHY.h4, fontWeight: 'bold', marginBottom: 4 },
     nameDesc: { ...TYPOGRAPHY.caption },
+    // Future Enhancements Styles
+    futureCard: {
+        flexDirection: 'row',
+        padding: SPACING.md,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderStyle: 'dashed',
+        gap: SPACING.md,
+        opacity: 0.85,
+    },
+    futureIconContainer: {
+        width: 52,
+        height: 52,
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    futureContent: {
+        flex: 1,
+    },
+    futureHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 4,
+    },
+    futureTitle: {
+        fontWeight: '600',
+        flex: 1,
+    },
+    comingSoonBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 8,
+    },
+    comingSoonText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+    },
+    futureDesc: {
+        lineHeight: 18,
+    },
 });
 
