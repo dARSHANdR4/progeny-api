@@ -273,7 +273,7 @@ DISEASE_REMEDIES = {
 }
 
 
-def read_file_as_image(data) -> np.ndarray:
+def read_file_as_image(data, target_size=(256, 256)) -> np.ndarray:
     """Preprocess image for model input"""
     image = Image.open(io.BytesIO(data))
     
@@ -282,7 +282,7 @@ def read_file_as_image(data) -> np.ndarray:
         image = image.convert('RGB')
     
     # Resize to model input size
-    image = image.resize((256, 256))
+    image = image.resize(target_size)
     
     # Convert to array
     image_array = np.array(image)
@@ -388,9 +388,9 @@ def detect_leaf():
         if 'image' not in request.files:
             return jsonify({'error': 'No image provided'}), 400
         
-        # Read and preprocess image
+        # Read and preprocess image (Leaf detector expects 224x224)
         image_file = request.files['image']
-        image = read_file_as_image(image_file.read())
+        image = read_file_as_image(image_file.read(), target_size=(224, 224))
         img_batch = np.expand_dims(image, 0)
         
         print(f"\n{'='*60}")
