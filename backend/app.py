@@ -403,14 +403,28 @@ def detect_leaf():
         
         # Run prediction
         predictions = LEAF_DETECTOR.predict(img_batch, verbose=0)
-        predicted_idx = np.argmax(predictions[0])
-        confidence = float(np.max(predictions[0]))
-        predicted_class = LEAF_CLASSES[predicted_idx]
-        is_leaf = predicted_class == 'Leaf'
         
-        print(f"   Leaf: {predictions[0][0]:.4f}")
-        print(f"   Non_Leaf: {predictions[0][1]:.4f}")
-        print(f"   Result: {'🍃 LEAF' if is_leaf else '❌ NOT A LEAF'} ({confidence*100:.1f}%)")
+        # Handle both single-output (sigmoid) and multi-output (softmax) models
+        if len(predictions[0]) == 1:
+            # Sigmoid: 1.0 = Leaf, 0.0 = Non-Leaf
+            prob_leaf = float(predictions[0][0])
+            is_leaf = prob_leaf > 0.5
+            confidence = prob_leaf if is_leaf else (1.0 - prob_leaf)
+            predicted_class = 'Leaf' if is_leaf else 'Non_Leaf'
+            
+            print(f"   Probability (Leaf): {prob_leaf:.4f}")
+            print(f"   Result: {'🍃 LEAF' if is_leaf else '❌ NOT A LEAF'} ({confidence*100:.1f}%)")
+        else:
+            # Softmax: [prob_leaf, prob_non_leaf]
+            predicted_idx = np.argmax(predictions[0])
+            confidence = float(np.max(predictions[0]))
+            predicted_class = LEAF_CLASSES[predicted_idx]
+            is_leaf = predicted_class == 'Leaf'
+            
+            print(f"   Leaf Score: {predictions[0][0]:.4f}")
+            print(f"   Non_Leaf Score: {predictions[0][1]:.4f}")
+            print(f"   Result: {'🍃 LEAF' if is_leaf else '❌ NOT A LEAF'} ({confidence*100:.1f}%)")
+        
         print(f"{'='*60}\n")
         
         return jsonify({
