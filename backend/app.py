@@ -157,10 +157,14 @@ for crop in crop_types:
                 print(f"✗ ERROR: tf_keras fallback failed for {crop}")
                 raise e
 
-        # Log class count mismatch
+        # Log class count mismatch and architecture
         model = MODELS[crop]['model']
         expected = len(MODELS[crop]['classes'])
         actual = model.output_shape[-1]
+        
+        print(f"   Model '{crop}' architecture:")
+        model.summary(print_fn=lambda x: print(f"   {x}"))
+        
         if expected != actual:
             print(f'⚠️ WARNING: {crop} model expects {actual} classes, but mapping has {expected}!')
     except Exception as e:
