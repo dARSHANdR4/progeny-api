@@ -432,8 +432,8 @@ def detect_leaf():
             'confidence': confidence,
             'predicted_class': predicted_class,
             'all_scores': {
-                'leaf': float(predictions[0][0]),
-                'non_leaf': float(predictions[0][1])
+                'leaf': float(predictions[0][0]) if len(predictions[0]) == 1 else float(predictions[0][0]),
+                'non_leaf': (1.0 - float(predictions[0][0])) if len(predictions[0]) == 1 else float(predictions[0][1])
             }
         })
     except Exception as e:
