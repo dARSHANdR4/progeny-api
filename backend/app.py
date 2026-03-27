@@ -13,6 +13,37 @@ warnings.filterwarnings('ignore', category=UserWarning, module='absl')
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import tensorflow as tf
+print(f"✓ TensorFlow version: {tf.__version__}")
+try:
+    import keras
+    print(f"✓ Keras version: {keras.__version__}")
+    print(f"✓ Keras path: {keras.__file__}")
+    
+    # Custom layers to handle unrecognized metadata from different Keras/TF versions
+    class SafeInputLayer(keras.layers.InputLayer):
+        def __init__(self, *args, **kwargs):
+            kwargs.pop('optional', None)
+            if 'batch_shape' in kwargs and not hasattr(keras.layers.InputLayer, 'batch_shape'):
+                # In some Keras 3 versions, batch_shape is not a direct argument
+                batch_shape = kwargs.pop('batch_shape')
+                if 'shape' not in kwargs and batch_shape is not None:
+                    kwargs['shape'] = batch_shape[1:]
+                    kwargs['batch_size'] = batch_shape[0]
+            super().__init__(*args, **kwargs)
+
+    class SafeDense(keras.layers.Dense):
+        def __init__(self, *args, **kwargs):
+            kwargs.pop('quantization_config', None)
+            super().__init__(*args, **kwargs)
+            
+    CUSTOM_OBJECTS = {
+        'InputLayer': SafeInputLayer,
+        'Dense': SafeDense
+    }
+except ImportError:
+    keras = tf.keras
+    print("⚠️ Keras standalone not found, using tf.keras")
+    CUSTOM_OBJECTS = {}
 import numpy as np
 from PIL import Image
 import io
@@ -79,8 +110,21 @@ LEAF_CLASSES = ['Leaf', 'Non_Leaf']
 try:
     leaf_model_path = os.path.join(MODELS_DIR, 'leaf_detector.h5')
     if os.path.exists(leaf_model_path):
-        LEAF_DETECTOR = tf.keras.models.load_model(leaf_model_path)
-        print(f'✓ Loaded leaf detector from {leaf_model_path}')
+        try:
+            # Use standalone keras with custom objects to handle version mismatches
+            with keras.utils.custom_object_scope(CUSTOM_OBJECTS):
+                LEAF_DETECTOR = keras.models.load_model(leaf_model_path)
+            print(f'✓ Loaded leaf detector from {leaf_model_path}')
+        except Exception as e:
+            print(f"✗ ERROR: Standard loading failed for leaf detector: {e}")
+            print(f"  Attempting legacy workaround...")
+            try:
+                import tf_keras
+                LEAF_DETECTOR = tf_keras.models.load_model(leaf_model_path)
+                print(f"✓ Loaded leaf detector via tf_keras (legacy) workaround")
+            except ImportError:
+                print(f"✗ ERROR: tf_keras not found for fallback.")
+                raise e
     else:
         print(f'⚠️ Leaf detector model not found at {leaf_model_path}')
 except Exception as e:
@@ -89,11 +133,30 @@ except Exception as e:
 for crop in crop_types:
     try:
         model_path = os.path.join(MODELS_DIR, f'{crop}_model.h5')
-        MODELS[crop] = {
-            'model': tf.keras.models.load_model(model_path),
-            'classes': CLASS_MAPPINGS[crop]
-        }
-        print(f'✓ Loaded {crop} model from {model_path}')
+        try:
+            # Use standalone keras with custom objects
+            with keras.utils.custom_object_scope(CUSTOM_OBJECTS):
+                model = keras.models.load_model(model_path)
+            MODELS[crop] = {
+                'model': model,
+                'classes': CLASS_MAPPINGS[crop]
+            }
+            print(f'✓ Loaded {crop} model from {model_path}')
+        except Exception as e:
+            print(f"✗ ERROR: Standard loading failed for {crop} model: {e}")
+            # Attempt workaround with tf-keras (legacy)
+            try:
+                import tf_keras
+                model = tf_keras.models.load_model(model_path)
+                MODELS[crop] = {
+                    'model': model,
+                    'classes': CLASS_MAPPINGS[crop]
+                }
+                print(f"✓ Loaded {crop} model via tf_keras (legacy) workaround")
+            except ImportError:
+                print(f"✗ ERROR: tf_keras fallback failed for {crop}")
+                raise e
+
         # Log class count mismatch
         model = MODELS[crop]['model']
         expected = len(MODELS[crop]['classes'])

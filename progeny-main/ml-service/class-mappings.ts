@@ -1,5 +1,5 @@
 // ml-service/class-mappings.ts
-export type CropType = 'apple' | 'corn' | 'potato' | 'tomato';
+export type CropType = 'apple' | 'corn' | 'potato' | 'tomato' | 'cotton';
 
 // Class mappings for each crop model
 export const CLASS_MAPPINGS: Record<CropType, Record<number, string>> = {
@@ -29,6 +29,14 @@ export const CLASS_MAPPINGS: Record<CropType, Record<number, string>> = {
     3: 'Leaf Mold',
     4: 'Target Spot',
     5: 'Healthy',
+  },
+  cotton: {
+    0: 'Aphids',
+    1: 'Army worm',
+    2: 'Bacterial Blight',
+    3: 'Healthy',
+    4: 'Powdery Mildew',
+    5: 'Target Spot',
   },
 };
 
@@ -145,8 +153,29 @@ const DISEASE_REMEDIES: Record<string, string[]> = {
     'Continue regular monitoring for early disease detection',
     'Maintain proper watering and fertilization schedule',
     'Ensure good air circulation around plants',
-    'Practice preventive measures like crop rotation',
-    'Keep growing area clean and weed-free',
+  ],
+  
+  // Cotton diseases
+  'Aphids': [
+    'Apply neem oil or insecticidal soap',
+    'Encourage natural predators like ladybugs',
+    'Prune heavily infested leaves',
+    'Use yellow sticky traps to monitor populations',
+    'Avoid excessive nitrogen fertilization',
+  ],
+  'Army worm': [
+    'Apply Bacillus thuringiensis (Bt) or other bio-pesticides',
+    'Hand-pick and destroy larvae if population is small',
+    'Deep plow soil to expose and kill pupae',
+    'Install pheromone traps for monitoring adults',
+    'Remove weed hosts from field borders',
+  ],
+  'Bacterial Blight': [
+    'Use acid delinted and treated seeds',
+    'Rotate crops with non-host plants for at least 2 years',
+    'Remove and destroy infected plant debris',
+    'Avoid cultivation when plants are wet',
+    'Plant resistant cotton varieties',
   ],
 };
 

@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No image file provided" }, { status: 400 })
     }
 
-    if (!cropType || !['apple', 'corn', 'potato', 'tomato'].includes(cropType)) {
+    if (!cropType || !['apple', 'corn', 'potato', 'tomato', 'cotton'].includes(cropType)) {
       return NextResponse.json({ error: "Invalid or missing crop type" }, { status: 400 })
     }
 

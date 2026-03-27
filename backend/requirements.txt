@@ -1,4 +1,6 @@
-tensorflow-cpu>=2.16.0
+tensorflow-cpu==2.16.1
+keras>=3.0.0
+tf-keras
 Pillow>=10.0.0
 numpy>=1.24.0,<2.0.0
 flask>=3.0.0
