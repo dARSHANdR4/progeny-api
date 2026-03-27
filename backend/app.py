@@ -328,7 +328,7 @@ def predict():
         
         # Read and preprocess image
         image_file = request.files['image']
-        image = read_file_as_image(image_file.read())
+        image = read_file_as_image(image_file.read(), target_size=(256, 256))
         img_batch = np.expand_dims(image, 0)
         
         print(f"📷 Image shape: {img_batch.shape}")
