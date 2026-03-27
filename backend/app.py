@@ -97,7 +97,7 @@ MODELS = {}
 crop_types = ['apple', 'corn', 'potato', 'tomato', 'cotton']
 
 CLASS_MAPPINGS = {
-    'apple': ['Apple Scab', 'Black Rot', 'Cedar Apple Rust', 'Healthy', 'Unknown 1', 'Unknown 2', 'Unknown 3'],
+    'apple': ['Apple Scab', 'Black Rot', 'Cedar Apple Rust', 'Healthy'],
     'potato': ['Early Blight', 'Late Blight', 'Healthy'],
     'corn': ['Blight', 'Common Rust', 'Healthy'],
     'tomato': ['Bacterial Spot', 'Early Blight', 'Late Blight', 'Leaf Mold', 'Target Spot', 'Healthy'],
