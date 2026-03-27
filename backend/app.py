@@ -115,6 +115,8 @@ try:
             with keras.utils.custom_object_scope(CUSTOM_OBJECTS):
                 LEAF_DETECTOR = keras.models.load_model(leaf_model_path)
             print(f'✓ Loaded leaf detector from {leaf_model_path}')
+            print(f"   Model 'leaf_detector' architecture:")
+            LEAF_DETECTOR.summary(print_fn=lambda x: print(f"   {x}"))
         except Exception as e:
             print(f"✗ ERROR: Standard loading failed for leaf detector: {e}")
             print(f"  Attempting legacy workaround...")
@@ -399,7 +401,7 @@ def detect_leaf():
         # Read and preprocess image (Leaf detector expects 224x224)
         image_file = request.files['image']
         image = read_file_as_image(image_file.read(), target_size=(224, 224))
-        img_batch = np.expand_dims(image, 0)
+        img_batch = np.expand_dims(image, 0) / 255.0
         
         print(f"\n{'='*60}")
         print(f"🍃 LEAF DETECTION RUNNING")
