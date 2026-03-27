@@ -400,8 +400,15 @@ def detect_leaf():
         
         # Read and preprocess image (Leaf detector expects 224x224)
         image_file = request.files['image']
-        image = read_file_as_image(image_file.read(), target_size=(224, 224))
-        img_batch = np.expand_dims(image, 0) / 255.0
+        image_data = image_file.read()
+        image = read_file_as_image(image_data, target_size=(224, 224))
+        
+        # DEBUG: Print image stats
+        print(f"   Image Stats: Min={image.min():.1f}, Max={image.max():.1f}, Mean={image.mean():.1f}")
+        
+        # Normalized for MobileNetV2 style ([-1, 1])
+        img_batch = np.expand_dims(image, 0)
+        img_batch = (img_batch / 127.5) - 1.0
         
         print(f"\n{'='*60}")
         print(f"🍃 LEAF DETECTION RUNNING")
@@ -409,16 +416,18 @@ def detect_leaf():
         
         # Run prediction
         predictions = LEAF_DETECTOR.predict(img_batch, verbose=0)
+        print(f"   Raw Prediction: {predictions[0]}")
         
         # Handle both single-output (sigmoid) and multi-output (softmax) models
         if len(predictions[0]) == 1:
-            # Sigmoid: 1.0 = Leaf, 0.0 = Non-Leaf
-            prob_leaf = float(predictions[0][0])
-            is_leaf = prob_leaf > 0.5
-            confidence = prob_leaf if is_leaf else (1.0 - prob_leaf)
+            # Based on class_indices.json: {"Leaf": 0, "Non_Leaf": 1}
+            # In sigmoid, the output is the probability of class index 1 (Non_Leaf)
+            prob_non_leaf = float(predictions[0][0])
+            is_leaf = prob_non_leaf < 0.5  # 0.0 is Leaf, 1.0 is Non-Leaf
+            confidence = (1.0 - prob_non_leaf) if is_leaf else prob_non_leaf
             predicted_class = 'Leaf' if is_leaf else 'Non_Leaf'
             
-            print(f"   Probability (Leaf): {prob_leaf:.4f}")
+            print(f"   Prob (Non-Leaf): {prob_non_leaf:.4f}")
             print(f"   Result: {'🍃 LEAF' if is_leaf else '❌ NOT A LEAF'} ({confidence*100:.1f}%)")
         else:
             # Softmax: [prob_leaf, prob_non_leaf]
@@ -438,8 +447,8 @@ def detect_leaf():
             'confidence': confidence,
             'predicted_class': predicted_class,
             'all_scores': {
-                'leaf': float(predictions[0][0]) if len(predictions[0]) == 1 else float(predictions[0][0]),
-                'non_leaf': (1.0 - float(predictions[0][0])) if len(predictions[0]) == 1 else float(predictions[0][1])
+                'leaf': (1.0 - float(predictions[0][0])) if len(predictions[0]) == 1 else float(predictions[0][0]),
+                'non_leaf': float(predictions[0][0]) if len(predictions[0]) == 1 else float(predictions[0][1])
             }
         })
     except Exception as e:
