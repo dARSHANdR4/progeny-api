@@ -295,7 +295,7 @@ export const accountApi = {
 
 // History API
 export const historyApi = {
-    getScanHistory: async (page = 1, limit = 20) => {
+    getScanHistory: async (page = 1, limit = 50) => {
         if (IS_DEMO_MODE) {
             // Return demo history data
             return { scans: DEMO_HISTORY };
