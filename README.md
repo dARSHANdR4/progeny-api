@@ -2,6 +2,12 @@
 
 Progeny AI is an advanced, production-grade ecosystem designed to empower farmers with AI-powered plant pathology. This repository contains the complete source code for the Web Dashboard, the Machine Learning Inference Service, and the Mobile Application.
 
+## 📦 Creating the Zip Package
+To generate the final source code ZIP for submission or backup:
+1. Open PowerShell in the project root.
+2. Run: `.\zip-progeny.ps1`
+3. The ZIP will be created in the root of the project with a timestamp.
+
 > [!IMPORTANT]
 > **Live Production Status:** This project is currently deployed and active.
 > - **Web Dashboard:** [progeny-api.vercel.app](https://progeny-api.vercel.app)
