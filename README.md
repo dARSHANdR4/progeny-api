@@ -95,10 +95,6 @@ For in-depth instructions on each component, please refer to their respective do
 eas build --platform android --profile production
 ```
 
-## 📝 License
-This project is licensed under the MIT License.
-
-
 ## Copyright and permissions
 
 Copyright © 2026 dARSHANdR4. All rights reserved.
